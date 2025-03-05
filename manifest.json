@@ -1,0 +1,22 @@
+{
+  "manifest_version": 3, 
+  "name": "WebTime tracker",
+  "version": "1.0",
+  "description": "A timer for tracking my time in certain websties",
+  "permissions": [
+    "storage",
+    "activeTab",
+    "scripting" 
+  ],
+  "content_scripts": [
+    {
+      "matches": ["https://www.youtube.com/*"], 
+      "js": ["dist/content.js"] ,
+      "css": ["src/content.css"]       
+    }
+  ],
+  
+  "action": {         
+    "default_popup": "src/popup.html"
+  }
+}
