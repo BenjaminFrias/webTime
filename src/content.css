@@ -1,1 +1,30 @@
+body {
+	margin: 0;
+}
 
+.timer-container {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	position: fixed;
+	right: 10px;
+	bottom: 10px;
+	width: 140px;
+	height: 65px;
+	box-sizing: border-box;
+	background: rgb(24, 24, 24);
+	z-index: 10000;
+	padding: 8px;
+	border-radius: 13px;
+	cursor: grab;
+}
+
+.timer-container > p {
+	font-family: "Rubik", Arial, Helvetica, sans-serif;
+	color: rgb(233, 233, 233);
+	font-weight: 700;
+	font-size: 40px;
+	padding: 0;
+	margin: 0;
+	user-select: none;
+}
