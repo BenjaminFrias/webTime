@@ -2,23 +2,33 @@ class Timer {
 	constructor() {
 		this.seconds = 0;
 		this.minutes = 0;
+		this.timer = null;
 		this.timerElem = null;
 	}
 
-	startTimer(timerElem) {
-		setInterval(() => {
+	startTimer() {
+		this.timer = setInterval(() => {
 			this.seconds++;
 			if (this.seconds > 59) {
 				this.minutes++;
 				this.seconds = 0;
 			}
 
-			// Update timer element
-			let minutesText = this.minutes <= 9 ? `0${this.minutes}` : this.minutes;
-			let secondsText = this.seconds <= 9 ? `0${this.seconds}` : this.seconds;
-
-			timerElem.textContent = `${minutesText}:${secondsText}`;
+			this.updateTimerElement(this.minutes, this.seconds);
 		}, 1000);
+	}
+
+	updateTimerElement(minutes = 0, seconds = 0) {
+		let minutesText = minutes <= 9 ? `0${minutes}` : minutes;
+		let secondsText = seconds <= 9 ? `0${seconds}` : seconds;
+		this.timerElem.textContent = `${minutesText}:${secondsText}`;
+	}
+
+	resetTimer() {
+		clearInterval(this.timer);
+		this.minutes = 0;
+		this.seconds = 0;
+		this.updateTimerElement();
 	}
 
 	createTimerElem() {
@@ -31,12 +41,12 @@ class Timer {
 		timerContainer.appendChild(timer);
 		document.body.appendChild(timerContainer);
 
-		return timer;
+		this.timerElem = timer;
 	}
 
 	initializeTimer() {
-		const timerElem = this.createTimerElem();
-		this.startTimer(timerElem);
+		this.createTimerElem();
+		this.startTimer();
 	}
 }
 
