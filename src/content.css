@@ -16,12 +16,12 @@ body {
 	z-index: 10000;
 	padding: 8px;
 	border-radius: 13px;
+	border: 1px solid #2f2f2f;
 	cursor: grab;
 }
 
 .timer-container > p {
-	font-family: "Rubik", Arial, Helvetica, sans-serif;
-	color: rgb(233, 233, 233);
+	color: #a3a3a3;
 	font-weight: 600;
 	font-size: 30px;
 	padding: 0;

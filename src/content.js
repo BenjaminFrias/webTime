@@ -21,6 +21,7 @@ function createTimerElem() {
 	timerContainer.classList.add("timer-container");
 
 	const timer = document.createElement("p");
+	timer.style.fontFamily = "'Rubik', sans-serif";
 
 	timerContainer.appendChild(timer);
 	document.body.appendChild(timerContainer);
@@ -32,5 +33,14 @@ function initializeTimer() {
 	const timerElem = createTimerElem();
 	startTimer(timerElem);
 }
+
+function injectGoogleFonts() {
+	const link = document.createElement("link");
+	link.rel = "stylesheet";
+	link.href =
+		"https://fonts.googleapis.com/css2?family=Rubik:wght@400;600&display=swap";
+	document.head.appendChild(link);
+}
+injectGoogleFonts();
 
 initializeTimer();
