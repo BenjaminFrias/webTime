@@ -18,6 +18,10 @@ class Timer {
 		}, 1000);
 	}
 
+	stopTimer() {
+		clearInterval(this.timer);
+	}
+
 	updateTimerElement(minutes = 0, seconds = 0) {
 		let minutesText = minutes <= 9 ? `0${minutes}` : minutes;
 		let secondsText = seconds <= 9 ? `0${seconds}` : seconds;
@@ -25,7 +29,7 @@ class Timer {
 	}
 
 	resetTimer() {
-		clearInterval(this.timer);
+		this.stopTimer();
 		this.minutes = 0;
 		this.seconds = 0;
 		this.updateTimerElement();
