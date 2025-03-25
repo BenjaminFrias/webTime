@@ -5,14 +5,15 @@ function startTimer(timerElem) {
 	setInterval(() => {
 		seconds++;
 		if (seconds > 59) {
+			minutes++;
 			seconds = 0;
-			minutes = seconds % 60;
 		}
 
 		// Update timer element
-		timerElem.textContent = `${minutes <= 9 ? `0${minutes}` : minutes}:${
-			seconds <= 9 ? `0${seconds}` : seconds
-		}`;
+		let minutesText = minutes <= 9 ? `0${minutes}` : minutes;
+		let secondsText = seconds <= 9 ? `0${seconds}` : seconds;
+
+		timerElem.textContent = `${minutesText}:${secondsText}`;
 	}, 1000);
 }
 
