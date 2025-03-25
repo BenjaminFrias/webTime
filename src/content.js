@@ -1,40 +1,49 @@
-function startTimer(timerElem) {
-	let seconds = 0;
-	let minutes = 0;
+class Timer {
+	constructor() {
+		this.seconds = 0;
+		this.minutes = 0;
+		this.timerElem = null;
+	}
 
-	setInterval(() => {
-		seconds++;
-		if (seconds > 59) {
-			minutes++;
-			seconds = 0;
-		}
+	startTimer(timerElem) {
+		setInterval(() => {
+			this.seconds++;
+			if (this.seconds > 59) {
+				this.minutes++;
+				this.seconds = 0;
+			}
 
-		// Update timer element
-		let minutesText = minutes <= 9 ? `0${minutes}` : minutes;
-		let secondsText = seconds <= 9 ? `0${seconds}` : seconds;
+			// Update timer element
+			let minutesText = this.minutes <= 9 ? `0${this.minutes}` : this.minutes;
+			let secondsText = this.seconds <= 9 ? `0${this.seconds}` : this.seconds;
 
-		timerElem.textContent = `${minutesText}:${secondsText}`;
-	}, 1000);
+			timerElem.textContent = `${minutesText}:${secondsText}`;
+		}, 1000);
+	}
+
+	createTimerElem() {
+		const timerContainer = document.createElement("div");
+		timerContainer.classList.add("timer-container");
+
+		const timer = document.createElement("p");
+		timer.style.fontFamily = "'Rubik', sans-serif";
+
+		timerContainer.appendChild(timer);
+		document.body.appendChild(timerContainer);
+
+		return timer;
+	}
+
+	initializeTimer() {
+		const timerElem = this.createTimerElem();
+		this.startTimer(timerElem);
+	}
 }
 
-function createTimerElem() {
-	const timerContainer = document.createElement("div");
-	timerContainer.classList.add("timer-container");
+const timer = new Timer();
+timer.initializeTimer();
 
-	const timer = document.createElement("p");
-	timer.style.fontFamily = "'Rubik', sans-serif";
-
-	timerContainer.appendChild(timer);
-	document.body.appendChild(timerContainer);
-
-	return timer;
-}
-
-function initializeTimer() {
-	const timerElem = createTimerElem();
-	startTimer(timerElem);
-}
-
+// Inject custom fonts in document
 function injectGoogleFonts() {
 	const link = document.createElement("link");
 	link.rel = "stylesheet";
@@ -43,5 +52,3 @@ function injectGoogleFonts() {
 	document.head.appendChild(link);
 }
 injectGoogleFonts();
-
-initializeTimer();
