@@ -22,17 +22,17 @@ class Timer {
 		clearInterval(this.timer);
 	}
 
-	updateTimerElement(minutes = 0, seconds = 0) {
-		let minutesText = minutes <= 9 ? `0${minutes}` : minutes;
-		let secondsText = seconds <= 9 ? `0${seconds}` : seconds;
-		this.timerElem.textContent = `${minutesText}:${secondsText}`;
-	}
-
 	resetTimer() {
 		this.stopTimer();
 		this.minutes = 0;
 		this.seconds = 0;
 		this.updateTimerElement();
+	}
+
+	updateTimerElement(minutes = 0, seconds = 0) {
+		let minutesText = minutes <= 9 ? `0${minutes}` : minutes;
+		let secondsText = seconds <= 9 ? `0${seconds}` : seconds;
+		this.timerElem.textContent = `${minutesText}:${secondsText}`;
 	}
 
 	createTimerElem() {
@@ -48,14 +48,29 @@ class Timer {
 		this.timerElem = timer;
 	}
 
-	initializeTimer() {
+	initExtension() {
 		this.createTimerElem();
 		this.startTimer();
 	}
 }
 
 const timer = new Timer();
-timer.initializeTimer();
+timer.initExtension();
+
+// Detect if tab is visible or hidden
+function handleVisibilityChange() {
+	if (document.visibilityState === "visible") {
+		// Tab is visible
+		timer.startTimer();
+		chrome.runtime.sendMessage({ action: "tabVisible" });
+	} else {
+		// Tab is hidden
+		timer.stopTimer();
+		chrome.runtime.sendMessage({ action: "tabHidden" });
+	}
+}
+
+document.addEventListener("visibilitychange", handleVisibilityChange);
 
 // Inject custom fonts in document
 function injectGoogleFonts() {

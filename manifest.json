@@ -6,8 +6,12 @@
   "permissions": [
     "storage",
     "activeTab",
-    "scripting" 
+    "scripting",
+    "tabs"
   ],
+  "background": {
+    "service_worker": "src/background.js"
+  },
   "content_scripts": [
     {
       "matches": ["https://www.youtube.com/*"], 
