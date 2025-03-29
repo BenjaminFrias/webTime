@@ -4,7 +4,7 @@ class Timer {
 		this.timerElem = null;
 	}
 
-	startTimer(seconds = 0, minutes = 0) {
+	startTimer(minutes = 0, seconds = 0) {
 		this.timer = setInterval(() => {
 			seconds++;
 			if (seconds > 59) {
@@ -48,10 +48,9 @@ class Timer {
 const timer = new Timer();
 timer.createTimerElem();
 
+// TODO: stop timer when it's not youtube or close yt tabs
 function requestDataFromBackground() {
 	chrome.runtime.sendMessage({ action: "getData" }, function (response) {
-		console.log(response);
-
 		if (response && response.timer) {
 			// Use the data received from the background script
 			timer.resetTimer();
@@ -61,10 +60,8 @@ function requestDataFromBackground() {
 				response.timer.seconds,
 			];
 
-			timer.startTimer(minutes, seconds);
+			timer.startTimer(minutes, seconds + 1);
 		} else {
-			console.log("There is not data");
-
 			timer.startTimer();
 		}
 	});

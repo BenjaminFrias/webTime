@@ -1,37 +1,20 @@
 let activeTabId = null;
 
-// Check if it's a yt tab
-chrome.tabs.onUpdated.addListener(function (tabId, changeInfo, tab) {
-	if (changeInfo.status === "complete" && tab.url) {
-		if (isYouTubeURL(tab.url)) {
-			// start timer
-
-			// If timer doesn't exist start timer and save it
-			if (!getTime()) {
-			}
-
-			// if timer exist start timer with prev values if not start timer with default values
-			console.log("is yt");
-		} else {
-			console.log("is not yt");
-			// ONE YT TAB
-		}
-	}
-});
-
 // Listen for messages from content script
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 	if (request.action === "getData") {
-		// Retrieve data from storage
+		// Retrieve timer data from storage
 		chrome.storage.local.get(["timer"], function (result) {
 			sendResponse({ timer: result.timer || undefined });
 		});
 		return true;
 	} else if (request.action === "setData") {
-		// Store data in storage
+		// Store timer data in storage
 		chrome.storage.local.set({ timer: request.data }, function () {
 			sendResponse({ success: true });
 		});
+		console.log("DATA SAVED");
+
 		return true;
 	}
 
@@ -55,29 +38,24 @@ function getYtTabsCount() {
 	return youtubeTabCount;
 }
 
-function saveTime({ seconds, minutes }) {
-	chrome.storage.sync.set(
-		{ ["timer"]: { seconds: seconds, minutes: minutes } },
-		() => {
-			if (chrome.runtime.lastError) {
-				console.error("Error saving setting:", chrome.runtime.lastError);
-			} else {
-				console.log(`Setting ${"timer"} saved successfully.`);
-			}
-		}
-	);
-}
+// Check if it's a yt tab
+// chrome.tabs.onUpdated.addListener(function (tabId, changeInfo, tab) {
+// 	if (changeInfo.status === "complete" && tab.url) {
+// 		if (isYouTubeURL(tab.url)) {
+// 			// start timer
 
-// Retrieve a global setting
-function getTime() {
-	chrome.storage.sync.get(["timer"], (result) => {
-		if (chrome.runtime.lastError) {
-			console.error("Error retrieving setting:", chrome.runtime.lastError);
-		} else {
-			return result["timer"];
-		}
-	});
-}
+// 			// If timer doesn't exist start timer and save it
+// 			if (!getTime()) {
+// 			}
+
+// 			// if timer exist start timer with prev values if not start timer with default values
+// 			console.log("is yt");
+// 		} else {
+// 			console.log("is not yt");
+// 			// ONE YT TAB
+// 		}
+// 	}
+// });
 
 // // IS YOUTUBE TAB ACTIVE?
 // chrome.tabs.onActivated.addListener(function (activeInfo) {
