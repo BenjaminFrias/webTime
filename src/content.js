@@ -6,14 +6,13 @@ class Timer {
 
 	startTimer(seconds = 0, minutes = 0) {
 		this.timer = setInterval(() => {
-			// TODO: store seconds in chrome storage
 			seconds++;
 			if (seconds > 59) {
-				// TODO: store minutes in chrome storage
 				minutes++;
 				seconds = 0;
 			}
-			this.updateTimerElement(seconds, minutes);
+			this.updateTimerElement(minutes, seconds);
+			sendDataToBackground({ minutes: minutes, seconds: seconds });
 		}, 1000);
 	}
 
@@ -48,7 +47,42 @@ class Timer {
 
 const timer = new Timer();
 timer.createTimerElem();
-timer.startTimer();
+
+function requestDataFromBackground() {
+	chrome.runtime.sendMessage({ action: "getData" }, function (response) {
+		console.log(response);
+
+		if (response && response.timer) {
+			// Use the data received from the background script
+			timer.resetTimer();
+
+			const [minutes, seconds] = [
+				response.timer.minutes,
+				response.timer.seconds,
+			];
+
+			timer.startTimer(minutes, seconds);
+		} else {
+			console.log("There is not data");
+
+			timer.startTimer();
+		}
+	});
+}
+requestDataFromBackground();
+
+function sendDataToBackground(data) {
+	chrome.runtime.sendMessage(
+		{ action: "setData", data: data },
+		function (response) {
+			if (response && response.success) {
+				console.log("Data saved successfully in background script.", data);
+			} else {
+				console.error("Error saving data in background script.");
+			}
+		}
+	);
+}
 
 // Inject custom fonts in document
 function injectGoogleFonts() {

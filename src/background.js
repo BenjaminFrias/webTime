@@ -1,10 +1,47 @@
 let activeTabId = null;
 
+// Check if it's a yt tab
+chrome.tabs.onUpdated.addListener(function (tabId, changeInfo, tab) {
+	if (changeInfo.status === "complete" && tab.url) {
+		if (isYouTubeURL(tab.url)) {
+			// start timer
+
+			// If timer doesn't exist start timer and save it
+			if (!getTime()) {
+			}
+
+			// if timer exist start timer with prev values if not start timer with default values
+			console.log("is yt");
+		} else {
+			console.log("is not yt");
+			// ONE YT TAB
+		}
+	}
+});
+
+// Listen for messages from content script
+chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+	if (request.action === "getData") {
+		// Retrieve data from storage
+		chrome.storage.local.get(["timer"], function (result) {
+			sendResponse({ timer: result.timer || undefined });
+		});
+		return true;
+	} else if (request.action === "setData") {
+		// Store data in storage
+		chrome.storage.local.set({ timer: request.data }, function () {
+			sendResponse({ success: true });
+		});
+		return true;
+	}
+
+	return false;
+});
+
 function isYouTubeURL(url) {
 	return url && url.includes("youtube.com");
 }
 
-// TODO: START TIMER IN NEW TAB AND CONTINUE IT WHEN CHANGES YT TAB
 let youtubeTabCount = 0;
 function getYtTabsCount() {
 	chrome.tabs.query({}, function (tabs) {
@@ -32,30 +69,15 @@ function saveTime({ seconds, minutes }) {
 }
 
 // Retrieve a global setting
-function getTime(callback) {
+function getTime() {
 	chrome.storage.sync.get(["timer"], (result) => {
 		if (chrome.runtime.lastError) {
 			console.error("Error retrieving setting:", chrome.runtime.lastError);
 		} else {
-			console.log("timer");
-
-			// callback(result["timer"]); // Pass the setting value to the callback
+			return result["timer"];
 		}
 	});
 }
-
-// Check if it's a yt tab
-chrome.tabs.onUpdated.addListener(function (tabId, changeInfo, tab) {
-	if (changeInfo.status === "complete" && tab.url) {
-		if (isYouTubeURL(tab.url)) {
-			// if timer exist start timer with prev values if not start timer with default values
-			console.log("is yt");
-		} else {
-			console.log("is not yt");
-			// ONE YT TAB
-		}
-	}
-});
 
 // // IS YOUTUBE TAB ACTIVE?
 // chrome.tabs.onActivated.addListener(function (activeInfo) {
@@ -73,10 +95,3 @@ chrome.tabs.onUpdated.addListener(function (tabId, changeInfo, tab) {
 // 		console.log("Active tab closed, resetting activeTabId");
 // 	}
 // });
-
-/*
- * Start a new timer when a youtube tab is created
- * Continue previous timer
- * Stop timer when user leaves youtube tab
- * Save timer every second in the browser storage
- */
