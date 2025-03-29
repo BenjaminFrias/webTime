@@ -1,8 +1,73 @@
-let activeTabId = null;
+// GLOBAL TIMER
+class Timer {
+	constructor() {
+		this.timer = null;
+		this.timerElem = null;
+	}
+
+	startTimer(minutes = 0, seconds = 0) {
+		this.timer = setInterval(() => {
+			seconds++;
+			if (seconds > 59) {
+				minutes++;
+				seconds = 0;
+			}
+			// TODO: pass time to content.js
+		}, 1000);
+	}
+
+	stopTimer() {
+		clearInterval(this.timer);
+	}
+
+	clearTimer() {
+		this.stopTimer();
+		// this.updateTimerElement();
+	}
+
+	updateTimerElement(minutes = 0, seconds = 0) {
+		let minutesText = minutes <= 9 ? `0${minutes}` : minutes;
+		let secondsText = seconds <= 9 ? `0${seconds}` : seconds;
+		this.timerElem.textContent = `${minutesText}:${secondsText}`;
+	}
+
+	createTimerElem() {
+		const timerContainer = document.createElement("div");
+		timerContainer.classList.add("timer-container");
+
+		const timer = document.createElement("p");
+		timer.style.fontFamily = "'Rubik', sans-serif";
+
+		timerContainer.appendChild(timer);
+		document.body.appendChild(timerContainer);
+
+		this.timerElem = timer;
+	}
+}
+
+const timerHandler = new Timer();
+
+chrome.tabs.onUpdated.addListener(function (tabId, changeInfo, tab) {
+	if (changeInfo.status === "complete" && tab.url) {
+		if (isYouTubeURL(tab.url)) {
+			getTimer()
+				.then((result) => {
+					timerHandler.clearTimer();
+					timerHandler.startTimer(result.minutes, result.seconds);
+				})
+				.catch((err) => {
+					console.log(err);
+				});
+		} else {
+			timerHandler.stopTimer();
+			// TODO: stop timer
+		}
+	}
+});
 
 // Listen for messages from content script
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
-	if (request.action === "getData") {
+	if (request.action === "getTimer") {
 		// Retrieve timer data from storage
 		chrome.storage.local.get(["timer"], function (result) {
 			sendResponse({ timer: result.timer || undefined });
@@ -25,37 +90,20 @@ function isYouTubeURL(url) {
 	return url && url.includes("youtube.com");
 }
 
-let youtubeTabCount = 0;
-function getYtTabsCount() {
-	chrome.tabs.query({}, function (tabs) {
-		for (const tab of tabs) {
-			if (isYouTubeURL(tab.url)) {
-				youtubeTabCount++;
+// Retrieve a global setting
+async function getTimer() {
+	return new Promise((resolve, reject) => {
+		chrome.storage.local.get(["timer"], (result) => {
+			if (chrome.runtime.lastError) {
+				reject(chrome.runtime.lastError);
+				return;
+			} else {
+				resolve(result.timer);
 			}
-		}
+		});
 	});
-
-	return youtubeTabCount;
 }
-
-// Check if it's a yt tab
-// chrome.tabs.onUpdated.addListener(function (tabId, changeInfo, tab) {
-// 	if (changeInfo.status === "complete" && tab.url) {
-// 		if (isYouTubeURL(tab.url)) {
-// 			// start timer
-
-// 			// If timer doesn't exist start timer and save it
-// 			if (!getTime()) {
-// 			}
-
-// 			// if timer exist start timer with prev values if not start timer with default values
-// 			console.log("is yt");
-// 		} else {
-// 			console.log("is not yt");
-// 			// ONE YT TAB
-// 		}
-// 	}
-// });
+// TODO: add setTimer function for every second
 
 // // IS YOUTUBE TAB ACTIVE?
 // chrome.tabs.onActivated.addListener(function (activeInfo) {
@@ -64,12 +112,4 @@ function getYtTabsCount() {
 // 			console.log("Active tab is now a YouTube tab:", tab);
 // 		}
 // 	});
-// });
-
-// chrome.tabs.onRemoved.addListener((tabId) => {
-// 	if (tabId === activeTabId) {
-// 		// TODO: on removed save the current day, timer
-// 		activeTabId = null; // Reset if the active tab is closed
-// 		console.log("Active tab closed, resetting activeTabId");
-// 	}
 // });

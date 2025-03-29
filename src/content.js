@@ -1,72 +1,23 @@
-class Timer {
-	constructor() {
-		this.timer = null;
-		this.timerElem = null;
-	}
+let timerData = null;
 
-	startTimer(minutes = 0, seconds = 0) {
-		this.timer = setInterval(() => {
-			seconds++;
-			if (seconds > 59) {
-				minutes++;
-				seconds = 0;
-			}
-			this.updateTimerElement(minutes, seconds);
-			sendDataToBackground({ minutes: minutes, seconds: seconds });
-		}, 1000);
-	}
-
-	stopTimer() {
-		clearInterval(this.timer);
-	}
-
-	resetTimer() {
-		this.stopTimer();
-		this.updateTimerElement();
-	}
-
-	updateTimerElement(minutes = 0, seconds = 0) {
-		let minutesText = minutes <= 9 ? `0${minutes}` : minutes;
-		let secondsText = seconds <= 9 ? `0${seconds}` : seconds;
-		this.timerElem.textContent = `${minutesText}:${secondsText}`;
-	}
-
-	createTimerElem() {
-		const timerContainer = document.createElement("div");
-		timerContainer.classList.add("timer-container");
-
-		const timer = document.createElement("p");
-		timer.style.fontFamily = "'Rubik', sans-serif";
-
-		timerContainer.appendChild(timer);
-		document.body.appendChild(timerContainer);
-
-		this.timerElem = timer;
-	}
-}
-
-const timer = new Timer();
-timer.createTimerElem();
-
+// TODO: REFAAAAAAAACTOOOOOOORRRRRRR! => MOVE EVERYTHING TO BACKGROUND BABY AND ONLY USE THIS FOR CREATE THE ELEMENT AND GET THE TIMER INFO!
 // TODO: stop timer when it's not youtube or close yt tabs
-function requestDataFromBackground() {
-	chrome.runtime.sendMessage({ action: "getData" }, function (response) {
+function requestTimerData() {
+	chrome.runtime.sendMessage({ action: "getTimer" }, function (response) {
 		if (response && response.timer) {
 			// Use the data received from the background script
-			timer.resetTimer();
-
-			const [minutes, seconds] = [
-				response.timer.minutes,
-				response.timer.seconds,
-			];
-
-			timer.startTimer(minutes, seconds + 1);
+			// timer.resetTimer();
+			// const [minutes, seconds] = [
+			// 	response.timer.minutes,
+			// 	response.timer.seconds,
+			// ];
+			// timer.startTimer(minutes, seconds + 1);
 		} else {
-			timer.startTimer();
+			// timer.startTimer();
 		}
 	});
 }
-requestDataFromBackground();
+// requestTimerData();
 
 function sendDataToBackground(data) {
 	chrome.runtime.sendMessage(
