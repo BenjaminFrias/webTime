@@ -47,13 +47,36 @@ class Timer {
 
 const timerHandler = new Timer();
 
-chrome.tabs.onUpdated.addListener(function (tabId, changeInfo, tab) {
+function getYtTabsCount() {
+	let youtubeTabCount = 0;
+	chrome.tabs.query({}, function (tabs) {
+		for (const tab of tabs) {
+			if (isYouTubeURL(tab.url)) {
+				youtubeTabCount++;
+			}
+		}
+	});
+	return youtubeTabCount;
+}
+
+// TODO: Set the initial timer object and save it in the browser because there isn't a timer stored in the beginning.
+
+chrome.tabs.onUpdated.addListener(async function (tabId, changeInfo, tab) {
 	if (changeInfo.status === "complete" && tab.url) {
 		if (isYouTubeURL(tab.url)) {
-			getTimer()
+			// TODO:
+			console.log("youtube tabs: ", getYtTabsCount());
+
+			console.log("YOUTUBE!");
+
+			await setTimerObj({ minutes: 0, seconds: 35 });
+
+			await getTimer()
 				.then((result) => {
-					timerHandler.clearTimer();
-					timerHandler.startTimer(result.minutes, result.seconds);
+					console.log(result);
+
+					// timerHandler.clearTimer();
+					// timerHandler.startTimer(result.minutes, result.seconds);
 				})
 				.catch((err) => {
 					console.log(err);
@@ -72,7 +95,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 		chrome.storage.local.get(["timer"], function (result) {
 			sendResponse({ timer: result.timer || undefined });
 		});
-		return true;
+		return { timer: "hey i'm timer" };
 	} else if (request.action === "setData") {
 		// Store timer data in storage
 		chrome.storage.local.set({ timer: request.data }, function () {
@@ -103,7 +126,15 @@ async function getTimer() {
 		});
 	});
 }
-// TODO: add setTimer function for every second
+
+async function setTimerObj({ minutes = 0, seconds = 0 }) {
+	try {
+		const timerObject = { minutes, seconds };
+		await chrome.storage.local.set({ ["timer"]: timerObject });
+	} catch (error) {
+		console.error(`Error storing object under key "timer":`, error);
+	}
+}
 
 // // IS YOUTUBE TAB ACTIVE?
 // chrome.tabs.onActivated.addListener(function (activeInfo) {

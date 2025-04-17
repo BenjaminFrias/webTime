@@ -5,6 +5,7 @@ let timerData = null;
 function requestTimerData() {
 	chrome.runtime.sendMessage({ action: "getTimer" }, function (response) {
 		if (response && response.timer) {
+			console.log(response.timer);
 			// Use the data received from the background script
 			// timer.resetTimer();
 			// const [minutes, seconds] = [
@@ -13,11 +14,13 @@ function requestTimerData() {
 			// ];
 			// timer.startTimer(minutes, seconds + 1);
 		} else {
+			console.log("not good response");
+
 			// timer.startTimer();
 		}
 	});
 }
-// requestTimerData();
+requestTimerData();
 
 function sendDataToBackground(data) {
 	chrome.runtime.sendMessage(
