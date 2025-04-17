@@ -5,7 +5,7 @@ class Timer {
 		this.timerElem = null;
 	}
 
-	startTimer(minutes = 0, seconds = 0) {
+	async startTimer(minutes = 0, seconds = 0) {
 		this.timer = setInterval(() => {
 			seconds++;
 			if (seconds > 59) {
@@ -13,6 +13,11 @@ class Timer {
 				seconds = 0;
 			}
 			// TODO: pass time to content.js
+			let minutesText = minutes <= 9 ? `0${minutes}` : minutes;
+			let secondsText = seconds <= 9 ? `0${seconds}` : seconds;
+			console.log(`${minutesText}:${secondsText}`);
+
+			setTimerObj({ minutes, seconds });
 		}, 1000);
 	}
 
@@ -59,31 +64,17 @@ function getYtTabsCount() {
 	return youtubeTabCount;
 }
 
-// TODO: Set the initial timer object and save it in the browser because there isn't a timer stored in the beginning.
-
 chrome.tabs.onUpdated.addListener(async function (tabId, changeInfo, tab) {
 	if (changeInfo.status === "complete" && tab.url) {
 		if (isYouTubeURL(tab.url)) {
-			// TODO:
-			console.log("youtube tabs: ", getYtTabsCount());
-
-			console.log("YOUTUBE!");
-
-			await setTimerObj({ minutes: 0, seconds: 35 });
-
 			await getTimer()
 				.then((result) => {
-					console.log(result);
-
-					// timerHandler.clearTimer();
-					// timerHandler.startTimer(result.minutes, result.seconds);
+					timerHandler.stopTimer();
+					timerHandler.startTimer(result.minutes, result.seconds);
 				})
 				.catch((err) => {
 					console.log(err);
 				});
-		} else {
-			timerHandler.stopTimer();
-			// TODO: stop timer
 		}
 	}
 });
