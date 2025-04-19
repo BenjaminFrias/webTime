@@ -25,17 +25,6 @@ class Timer {
 		clearInterval(this.timer);
 	}
 
-	clearTimer() {
-		this.stopTimer();
-		// this.updateTimerElement();
-	}
-
-	updateTimerElement(minutes = 0, seconds = 0) {
-		let minutesText = minutes <= 9 ? `0${minutes}` : minutes;
-		let secondsText = seconds <= 9 ? `0${seconds}` : seconds;
-		this.timerElem.textContent = `${minutesText}:${secondsText}`;
-	}
-
 	createTimerElem() {
 		const timerContainer = document.createElement("div");
 		timerContainer.classList.add("timer-container");
