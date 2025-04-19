@@ -64,6 +64,7 @@ function getYtTabsCount() {
 	return youtubeTabCount;
 }
 
+// Start timer when new YouTube tab is open
 chrome.tabs.onUpdated.addListener(async function (tabId, changeInfo, tab) {
 	if (changeInfo.status === "complete" && tab.url) {
 		if (isYouTubeURL(tab.url)) {
@@ -79,26 +80,47 @@ chrome.tabs.onUpdated.addListener(async function (tabId, changeInfo, tab) {
 	}
 });
 
-// Listen for messages from content script
-chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
-	if (request.action === "getTimer") {
-		// Retrieve timer data from storage
-		chrome.storage.local.get(["timer"], function (result) {
-			sendResponse({ timer: result.timer || undefined });
-		});
-		return { timer: "hey i'm timer" };
-	} else if (request.action === "setData") {
-		// Store timer data in storage
-		chrome.storage.local.set({ timer: request.data }, function () {
-			sendResponse({ success: true });
-		});
-		console.log("DATA SAVED");
-
-		return true;
-	}
-
-	return false;
+// Start/Stop timer when a YouTube tab is active
+chrome.tabs.onActivated.addListener(async function (activeInfo) {
+	chrome.tabs.get(activeInfo.tabId, async function (tab) {
+		if (tab && tab.url && isYouTubeURL(tab.url)) {
+			// Continue timer when user return to a yt tab
+			await getTimer()
+				.then((result) => {
+					timerHandler.stopTimer();
+					timerHandler.startTimer(result.minutes, result.seconds);
+				})
+				.catch((err) => {
+					console.log(err);
+				});
+		} else {
+			// Stop timer when user leaves yt tab
+			timerHandler.stopTimer();
+		}
+	});
 });
+
+// Listen for messages from content script
+// TODO: send timer info to content.js
+// chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+// 	if (request.action === "getTimer") {
+// 		// Retrieve timer data from storage
+// 		chrome.storage.local.get(["timer"], function (result) {
+// 			sendResponse({ timer: result.timer || undefined });
+// 		});
+// 		return { timer: "hey i'm timer" };
+// 	} else if (request.action === "setData") {
+// 		// Store timer data in storage
+// 		chrome.storage.local.set({ timer: request.data }, function () {
+// 			sendResponse({ success: true });
+// 		});
+// 		console.log("DATA SAVED");
+
+// 		return true;
+// 	}
+
+// 	return false;
+// });
 
 function isYouTubeURL(url) {
 	return url && url.includes("youtube.com");
@@ -126,12 +148,3 @@ async function setTimerObj({ minutes = 0, seconds = 0 }) {
 		console.error(`Error storing object under key "timer":`, error);
 	}
 }
-
-// // IS YOUTUBE TAB ACTIVE?
-// chrome.tabs.onActivated.addListener(function (activeInfo) {
-// 	chrome.tabs.get(activeInfo.tabId, function (tab) {
-// 		if (tab && tab.url && isYouTubeURL(tab.url)) {
-// 			console.log("Active tab is now a YouTube tab:", tab);
-// 		}
-// 	});
-// });
