@@ -40,7 +40,9 @@ class Timer {
 }
 
 const timerHandler = new Timer();
+// TODO: restart timer local storage on new day
 
+// TODO: add feat for max 3 yt tabs and prevent doomtabing
 function getYtTabsCount() {
 	let youtubeTabCount = 0;
 	chrome.tabs.query({}, function (tabs) {
@@ -89,27 +91,20 @@ chrome.tabs.onActivated.addListener(async function (activeInfo) {
 	});
 });
 
-// Listen for messages from content script
-// TODO: send timer info to content.js
-// chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
-// 	if (request.action === "getTimer") {
-// 		// Retrieve timer data from storage
-// 		chrome.storage.local.get(["timer"], function (result) {
-// 			sendResponse({ timer: result.timer || undefined });
-// 		});
-// 		return { timer: "hey i'm timer" };
-// 	} else if (request.action === "setData") {
-// 		// Store timer data in storage
-// 		chrome.storage.local.set({ timer: request.data }, function () {
-// 			sendResponse({ success: true });
-// 		});
-// 		console.log("DATA SAVED");
+// Listen for messages from content script and send it timer data
+chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+	if (request.action === "getTimerData") {
+		getTimer()
+			.then((result) => {
+				sendResponse({ timer: result || { minutes: 0, seconds: 0 } });
+			})
+			.catch((err) => {
+				console.log(err);
+			});
+	}
 
-// 		return true;
-// 	}
-
-// 	return false;
-// });
+	return true;
+});
 
 function isYouTubeURL(url) {
 	return url && url.includes("youtube.com");

@@ -1,39 +1,14 @@
-let timerData = null;
-
-// TODO: REFAAAAAAAACTOOOOOOORRRRRRR! => MOVE EVERYTHING TO BACKGROUND BABY AND ONLY USE THIS FOR CREATE THE ELEMENT AND GET THE TIMER INFO!
-// TODO: stop timer when it's not youtube or close yt tabs
+// Get timer data from background.js
 function requestTimerData() {
-	chrome.runtime.sendMessage({ action: "getTimer" }, function (response) {
-		if (response && response.timer) {
-			console.log(response.timer);
-			// Use the data received from the background script
-			// timer.resetTimer();
-			// const [minutes, seconds] = [
-			// 	response.timer.minutes,
-			// 	response.timer.seconds,
-			// ];
-			// timer.startTimer(minutes, seconds + 1);
+	chrome.runtime.sendMessage({ action: "getTimerData" }, function (response) {
+		if (response) {
+			console.log("Response from background: ", response);
 		} else {
-			console.log("not good response");
-
-			// timer.startTimer();
+			console.log("ERROR in receiving from background: ", response);
 		}
 	});
 }
 requestTimerData();
-
-function sendDataToBackground(data) {
-	chrome.runtime.sendMessage(
-		{ action: "setData", data: data },
-		function (response) {
-			if (response && response.success) {
-				console.log("Data saved successfully in background script.", data);
-			} else {
-				console.error("Error saving data in background script.");
-			}
-		}
-	);
-}
 
 // Inject custom fonts in document
 function injectGoogleFonts() {
