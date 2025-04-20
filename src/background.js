@@ -61,37 +61,15 @@ function getYtTabsCount() {
 // TODO: check if timer exist, if not set default timer value in chrome local storage
 // Start timer when new YouTube tab is open
 chrome.tabs.onUpdated.addListener(async function (tabId, changeInfo, tab) {
-	if (changeInfo.status === "complete" && tab.url) {
-		if (isYouTubeURL(tab.url)) {
-			await getTimer()
-				.then((result) => {
-					// timerHandler.stopTimer();
-					// timerHandler.startTimer(result.minutes, result.seconds);
-				})
-				.catch((err) => {
-					console.log(err);
-				});
-		}
+	if (changeInfo.status === "complete") {
+		updateTimerState(tab);
 	}
 });
 
 // Start/Stop timer when a YouTube tab is active
 chrome.tabs.onActivated.addListener(async function (activeInfo) {
 	chrome.tabs.get(activeInfo.tabId, async function (tab) {
-		if (tab && tab.url && isYouTubeURL(tab.url)) {
-			// Continue timer when user return to a yt tab
-			await getTimer()
-				.then((result) => {
-					// timerHandler.stopTimer();
-					// timerHandler.startTimer(result.minutes, result.seconds);
-				})
-				.catch((err) => {
-					console.log(err);
-				});
-		} else {
-			// Stop timer when user leaves yt tab
-			timerHandler.stopTimer();
-		}
+		updateTimerState(tab);
 	});
 });
 
@@ -109,6 +87,24 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 
 	return true;
 });
+
+// handles starting/stopping the timer based on whether the tab is a YouTube tab.
+async function updateTimerState(tab) {
+	if (tab && tab.url && isYouTubeURL(tab.url)) {
+		// Continue timer when user return to a yt tab
+		getTimer()
+			.then((result) => {
+				timerHandler.stopTimer();
+				timerHandler.startTimer(result.minutes, result.seconds);
+			})
+			.catch((err) => {
+				console.log(err);
+			});
+	} else {
+		// Stop timer when user leaves yt tab
+		timerHandler.stopTimer();
+	}
+}
 
 function isYouTubeURL(url) {
 	return url && url.includes("youtube.com");
@@ -131,7 +127,6 @@ async function getTimer() {
 							reject(err);
 						});
 				} else {
-					console.log("Timer found: ", result[STORAGE_KEY]);
 					resolve(result[STORAGE_KEY]);
 				}
 			}
@@ -149,7 +144,6 @@ async function storeTimerObj(timer) {
 				);
 				reject(chrome.runtime.lastError);
 			} else {
-				console.log("Timer stored successfully:", timer);
 				resolve();
 			}
 		});
