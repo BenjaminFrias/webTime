@@ -1,4 +1,6 @@
-// GLOBAL TIMER
+const STORAGE_KEY = "timer";
+const defaultTimer = { minutes: 0, seconds: 0 };
+
 class Timer {
 	constructor() {
 		this.timer = null;
@@ -17,7 +19,7 @@ class Timer {
 			let secondsText = seconds <= 9 ? `0${seconds}` : seconds;
 			console.log(`${minutesText}:${secondsText}`);
 
-			setTimerObj({ minutes, seconds });
+			storeTimerObj({ minutes, seconds });
 		}, 1000);
 	}
 
@@ -40,6 +42,7 @@ class Timer {
 }
 
 const timerHandler = new Timer();
+
 // TODO: restart timer local storage on new day
 
 // TODO: add feat for max 3 yt tabs and prevent doomtabing
@@ -55,14 +58,15 @@ function getYtTabsCount() {
 	return youtubeTabCount;
 }
 
+// TODO: check if timer exist, if not set default timer value in chrome local storage
 // Start timer when new YouTube tab is open
 chrome.tabs.onUpdated.addListener(async function (tabId, changeInfo, tab) {
 	if (changeInfo.status === "complete" && tab.url) {
 		if (isYouTubeURL(tab.url)) {
 			await getTimer()
 				.then((result) => {
-					timerHandler.stopTimer();
-					timerHandler.startTimer(result.minutes, result.seconds);
+					// timerHandler.stopTimer();
+					// timerHandler.startTimer(result.minutes, result.seconds);
 				})
 				.catch((err) => {
 					console.log(err);
@@ -78,8 +82,8 @@ chrome.tabs.onActivated.addListener(async function (activeInfo) {
 			// Continue timer when user return to a yt tab
 			await getTimer()
 				.then((result) => {
-					timerHandler.stopTimer();
-					timerHandler.startTimer(result.minutes, result.seconds);
+					// timerHandler.stopTimer();
+					// timerHandler.startTimer(result.minutes, result.seconds);
 				})
 				.catch((err) => {
 					console.log(err);
@@ -112,23 +116,42 @@ function isYouTubeURL(url) {
 
 // Retrieve a global setting
 async function getTimer() {
-	return new Promise((resolve, reject) => {
-		chrome.storage.local.get(["timer"], (result) => {
+	return new Promise(async (resolve, reject) => {
+		chrome.storage.local.get([STORAGE_KEY], (result) => {
 			if (chrome.runtime.lastError) {
 				reject(chrome.runtime.lastError);
 				return;
 			} else {
-				resolve(result.timer);
+				if (!result[STORAGE_KEY]) {
+					storeTimerObj(defaultTimer)
+						.then(() => {
+							resolve(defaultTimer);
+						})
+						.catch((err) => {
+							reject(err);
+						});
+				} else {
+					console.log("Timer found: ", result[STORAGE_KEY]);
+					resolve(result[STORAGE_KEY]);
+				}
 			}
 		});
 	});
 }
 
-async function setTimerObj({ minutes = 0, seconds = 0 }) {
-	try {
-		const timerObject = { minutes, seconds };
-		await chrome.storage.local.set({ ["timer"]: timerObject });
-	} catch (error) {
-		console.error(`Error storing object under key "timer":`, error);
-	}
+async function storeTimerObj(timer) {
+	return new Promise((resolve, reject) => {
+		chrome.storage.local.set({ [STORAGE_KEY]: timer }, () => {
+			if (chrome.runtime.lastError) {
+				console.error(
+					"Error setting timer using chrome.storage.local.set:",
+					chrome.runtime.lastError
+				);
+				reject(chrome.runtime.lastError);
+			} else {
+				console.log("Timer stored successfully:", timer);
+				resolve();
+			}
+		});
+	});
 }
