@@ -89,20 +89,6 @@ function sendTimerData() {
 }
 sendTimerData();
 
-chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
-	if (request.action === "getTimerDataData") {
-		getTimerData()
-			.then((result) => {
-				sendResponse({ timer: result || { minutes: 0, seconds: 0 } });
-			})
-			.catch((err) => {
-				console.log(err);
-			});
-	}
-
-	return true;
-});
-
 // Resetting timer daily
 function setDefaultTimerDaily() {
 	const today = new Date().toLocaleDateString();
