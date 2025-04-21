@@ -19,6 +19,7 @@ class Timer {
 			console.log(`${minutesText}:${secondsText}`);
 
 			setTimerData({ minutes, seconds });
+			sendTimerData();
 		}, 1000);
 	}
 
@@ -46,6 +47,7 @@ chrome.tabs.onUpdated.addListener(async function (tabId, changeInfo, tab) {
 	if (changeInfo.status === "complete") {
 		setDefaultTimerDaily();
 		updateTimerState(tab);
+		sendTimerData();
 	}
 });
 
@@ -54,13 +56,47 @@ chrome.tabs.onActivated.addListener(async function (activeInfo) {
 	chrome.tabs.get(activeInfo.tabId, async function (tab) {
 		setDefaultTimerDaily();
 		updateTimerState(tab);
+		sendTimerData();
 	});
 });
 
-// Listen for messages from content script and send it timer data
+// Send timer data to current youtube tab content.js file
+function sendTimerData() {
+	chrome.tabs.query({}, function (tabs) {
+		if (tabs.length > 0) {
+			let activeTab = null;
+			for (let tab of tabs) {
+				if (isYouTubeURL(tab.url) && tab.active) {
+					activeTab = tab;
+				}
+			}
+
+			if (activeTab) {
+				let activeTabId = activeTab.id;
+
+				getTimerData()
+					.then((result) => {
+						console.log("sending data to content.js: ", result);
+
+						chrome.tabs.sendMessage(activeTabId, {
+							type: "background",
+							timer: result,
+						});
+					})
+					.catch((err) => {
+						console.log(err);
+					});
+			}
+		} else {
+			console.log("No active tab found in the current window.");
+		}
+	});
+}
+sendTimerData();
+
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
-	if (request.action === "getTimerData") {
-		getTimer()
+	if (request.action === "getTimerDataData") {
+		getTimerData()
 			.then((result) => {
 				sendResponse({ timer: result || { minutes: 0, seconds: 0 } });
 			})
@@ -112,7 +148,7 @@ function getYtTabsCount() {
 async function updateTimerState(tab) {
 	if (tab && tab.url && isYouTubeURL(tab.url)) {
 		// Continue timer when user return to a yt tab
-		getTimer()
+		getTimerData()
 			.then((result) => {
 				timerHandler.stopTimer();
 				timerHandler.startTimer(result.minutes, result.seconds);
@@ -131,7 +167,7 @@ function isYouTubeURL(url) {
 }
 
 // Retrieve a global setting
-async function getTimer() {
+async function getTimerData() {
 	return new Promise(async (resolve, reject) => {
 		chrome.storage.local.get([STORAGE_TIMER_KEY], (result) => {
 			if (chrome.runtime.lastError) {

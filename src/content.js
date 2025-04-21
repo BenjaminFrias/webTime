@@ -1,14 +1,11 @@
 // Get timer data from background.js
-function requestTimerData() {
-	chrome.runtime.sendMessage({ action: "getTimerData" }, function (response) {
-		if (response) {
-			console.log("Response from background: ", response);
-		} else {
-			console.log("ERROR in receiving from background: ", response);
-		}
-	});
-}
-requestTimerData();
+
+chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+	if (request.type === "background") {
+		const timer = request.timer;
+		console.log(timer);
+	}
+});
 
 // Inject custom fonts in document
 function injectGoogleFonts() {
