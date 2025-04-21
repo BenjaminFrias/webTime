@@ -1,25 +1,24 @@
-const STORAGE_KEY = "timer";
+const STORAGE_TIMER_KEY = "timer";
+const STORAGE_LAST_DAY_KEY = "lastSavedDay";
 const defaultTimer = { minutes: 0, seconds: 0 };
-
 class Timer {
 	constructor() {
 		this.timer = null;
 		this.timerElem = null;
 	}
 
-	async startTimer(minutes = 0, seconds = 0) {
+	startTimer(minutes = 0, seconds = 0) {
 		this.timer = setInterval(() => {
 			seconds++;
 			if (seconds > 59) {
 				minutes++;
 				seconds = 0;
 			}
-			// TODO: pass time to content.js
 			let minutesText = minutes <= 9 ? `0${minutes}` : minutes;
 			let secondsText = seconds <= 9 ? `0${seconds}` : seconds;
 			console.log(`${minutesText}:${secondsText}`);
 
-			storeTimerObj({ minutes, seconds });
+			setTimerData({ minutes, seconds });
 		}, 1000);
 	}
 
@@ -40,28 +39,12 @@ class Timer {
 		this.timerElem = timer;
 	}
 }
-
 const timerHandler = new Timer();
 
-// TODO: restart timer local storage on new day
-
-// TODO: add feat for max 3 yt tabs and prevent doomtabing
-function getYtTabsCount() {
-	let youtubeTabCount = 0;
-	chrome.tabs.query({}, function (tabs) {
-		for (const tab of tabs) {
-			if (isYouTubeURL(tab.url)) {
-				youtubeTabCount++;
-			}
-		}
-	});
-	return youtubeTabCount;
-}
-
-// TODO: check if timer exist, if not set default timer value in chrome local storage
 // Start timer when new YouTube tab is open
 chrome.tabs.onUpdated.addListener(async function (tabId, changeInfo, tab) {
 	if (changeInfo.status === "complete") {
+		setDefaultTimerDaily();
 		updateTimerState(tab);
 	}
 });
@@ -69,6 +52,7 @@ chrome.tabs.onUpdated.addListener(async function (tabId, changeInfo, tab) {
 // Start/Stop timer when a YouTube tab is active
 chrome.tabs.onActivated.addListener(async function (activeInfo) {
 	chrome.tabs.get(activeInfo.tabId, async function (tab) {
+		setDefaultTimerDaily();
 		updateTimerState(tab);
 	});
 });
@@ -87,6 +71,42 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 
 	return true;
 });
+
+// Resetting timer daily
+function setDefaultTimerDaily() {
+	const today = new Date().toLocaleDateString();
+
+	// Set default timer every new day
+	chrome.storage.local.get([STORAGE_LAST_DAY_KEY], (result) => {
+		if (!result[STORAGE_LAST_DAY_KEY]) {
+			// Storing current day in local storage
+			console.log("No previous date value... storing current day");
+			chrome.storage.local.set({ [STORAGE_LAST_DAY_KEY]: today });
+		} else {
+			console.log("Checking if it's a new day");
+			// Check for new day with local storage value
+			if (today != result[STORAGE_LAST_DAY_KEY]) {
+				console.log("It's a new day... setting default timer");
+				setTimerData(defaultTimer);
+				chrome.storage.local.set({ [STORAGE_LAST_DAY_KEY]: today });
+			}
+		}
+	});
+}
+setDefaultTimerDaily();
+
+// Get youtube tabs count
+function getYtTabsCount() {
+	let youtubeTabCount = 0;
+	chrome.tabs.query({}, function (tabs) {
+		for (const tab of tabs) {
+			if (isYouTubeURL(tab.url)) {
+				youtubeTabCount++;
+			}
+		}
+	});
+	return youtubeTabCount;
+}
 
 // handles starting/stopping the timer based on whether the tab is a YouTube tab.
 async function updateTimerState(tab) {
@@ -113,13 +133,13 @@ function isYouTubeURL(url) {
 // Retrieve a global setting
 async function getTimer() {
 	return new Promise(async (resolve, reject) => {
-		chrome.storage.local.get([STORAGE_KEY], (result) => {
+		chrome.storage.local.get([STORAGE_TIMER_KEY], (result) => {
 			if (chrome.runtime.lastError) {
 				reject(chrome.runtime.lastError);
 				return;
 			} else {
-				if (!result[STORAGE_KEY]) {
-					storeTimerObj(defaultTimer)
+				if (!result[STORAGE_TIMER_KEY]) {
+					setTimerData(defaultTimer)
 						.then(() => {
 							resolve(defaultTimer);
 						})
@@ -127,21 +147,18 @@ async function getTimer() {
 							reject(err);
 						});
 				} else {
-					resolve(result[STORAGE_KEY]);
+					resolve(result[STORAGE_TIMER_KEY]);
 				}
 			}
 		});
 	});
 }
 
-async function storeTimerObj(timer) {
+async function setTimerData(timer) {
 	return new Promise((resolve, reject) => {
-		chrome.storage.local.set({ [STORAGE_KEY]: timer }, () => {
+		chrome.storage.local.set({ [STORAGE_TIMER_KEY]: timer }, () => {
 			if (chrome.runtime.lastError) {
-				console.error(
-					"Error setting timer using chrome.storage.local.set:",
-					chrome.runtime.lastError
-				);
+				console.error("Error setting timer:", chrome.runtime.lastError);
 				reject(chrome.runtime.lastError);
 			} else {
 				resolve();
