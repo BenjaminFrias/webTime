@@ -14,9 +14,6 @@ class Timer {
 				minutes++;
 				seconds = 0;
 			}
-			let minutesText = minutes <= 9 ? `0${minutes}` : minutes;
-			let secondsText = seconds <= 9 ? `0${seconds}` : seconds;
-			console.log(`${minutesText}:${secondsText}`);
 
 			setTimerData({ minutes, seconds });
 			sendTimerData();
@@ -76,8 +73,6 @@ function sendTimerData() {
 
 				getTimerData()
 					.then((result) => {
-						console.log("sending data to content.js: ", result);
-
 						chrome.tabs.sendMessage(activeTabId, {
 							type: "background",
 							timer: result,
