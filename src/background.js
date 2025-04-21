@@ -126,19 +126,6 @@ function setDefaultTimerDaily() {
 }
 setDefaultTimerDaily();
 
-// Get youtube tabs count
-function getYtTabsCount() {
-	let youtubeTabCount = 0;
-	chrome.tabs.query({}, function (tabs) {
-		for (const tab of tabs) {
-			if (isYouTubeURL(tab.url)) {
-				youtubeTabCount++;
-			}
-		}
-	});
-	return youtubeTabCount;
-}
-
 // handles starting/stopping the timer based on whether the tab is a YouTube tab.
 async function updateTimerState(tab) {
 	if (tab && tab.url && isYouTubeURL(tab.url)) {
