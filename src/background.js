@@ -42,6 +42,13 @@ const timerHandler = new Timer();
 // Start timer when new YouTube tab is open
 chrome.tabs.onUpdated.addListener(async function (tabId, changeInfo, tab) {
 	if (changeInfo.status === "complete") {
+		// Send message to content and create timer element
+		if (isYouTubeURL(tab.url)) {
+			chrome.tabs.sendMessage(tabId, {
+				type: "createTimerElement",
+			});
+		}
+
 		setDefaultTimerDaily();
 		updateTimerState(tab);
 		sendTimerData();

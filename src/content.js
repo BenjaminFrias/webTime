@@ -24,13 +24,16 @@ class TimerUI {
 }
 
 const timerUI = new TimerUI();
-timerUI.createTimerElem();
 
 // Get timer data from background.js
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 	if (request.type === "background") {
 		const timerData = request.timer;
 		timerUI.updateTimerElem(timerData);
+	}
+
+	if (request.type === "createTimerElement") {
+		timerUI.createTimerElem();
 	}
 });
 
