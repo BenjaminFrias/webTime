@@ -23,78 +23,70 @@ class Timer {
 	stopTimer() {
 		clearInterval(this.timer);
 	}
-
-	createTimerElem() {
-		const timerContainer = document.createElement("div");
-		timerContainer.classList.add("timer-container");
-
-		const timer = document.createElement("p");
-		timer.style.fontFamily = "'Rubik', sans-serif";
-
-		timerContainer.appendChild(timer);
-		document.body.appendChild(timerContainer);
-
-		this.timerElem = timer;
-	}
 }
 const timerHandler = new Timer();
 
 // Start timer when new YouTube tab is open
 chrome.tabs.onUpdated.addListener(async function (tabId, changeInfo, tab) {
-	if (changeInfo.status === "complete") {
-		// Send message to content and create timer element
+	if (changeInfo.status === "complete" && tab && tab.url) {
+		// Create timer element in content.js
 		if (isYouTubeURL(tab.url)) {
 			chrome.tabs.sendMessage(tabId, {
 				type: "createTimerElement",
 			});
+			sendTimerData();
 		}
 
 		setDefaultTimerDaily();
 		updateTimerState(tab);
-		sendTimerData();
 	}
 });
 
 // Start/Stop timer when a YouTube tab is active
 chrome.tabs.onActivated.addListener(async function (activeInfo) {
 	chrome.tabs.get(activeInfo.tabId, async function (tab) {
-		setDefaultTimerDaily();
-		updateTimerState(tab);
-		sendTimerData();
+		if (tab && tab.url) {
+			setDefaultTimerDaily();
+			updateTimerState(tab);
+
+			if (isYouTubeURL(tab.url)) {
+				sendTimerData();
+			}
+		}
 	});
 });
 
-// Send timer data to current youtube tab content.js file
-function sendTimerData() {
-	chrome.tabs.query({}, function (tabs) {
-		if (tabs.length > 0) {
-			let activeTab = null;
-			for (let tab of tabs) {
-				if (isYouTubeURL(tab.url) && tab.active) {
-					activeTab = tab;
-				}
-			}
-
-			if (activeTab) {
-				let activeTabId = activeTab.id;
-
-				getTimerData()
-					.then((result) => {
-						chrome.tabs.sendMessage(activeTabId, {
-							type: "background",
-							timer: result,
-						});
-					})
-					.catch((err) => {
-						console.log(err);
-					});
-			}
-		} else {
-			console.log("No active tab found in the current window.");
-		}
-	});
+async function getCurrentTab() {
+	let queryOptions = { active: true, lastFocusedWindow: true };
+	try {
+		let [tab] = await chrome.tabs.query(queryOptions);
+		return tab;
+	} catch (err) {
+		console.log(err);
+	}
 }
-sendTimerData();
+
+async function sendTimerData() {
+	let tab = await getCurrentTab();
+
+	if (tab && tab.url && isYouTubeURL(tab.url)) {
+		let activeTabId = tab.id;
+
+		try {
+			const result = await getTimerData();
+			if (!result) {
+				throw new Error("Error at getting data: ", result);
+			}
+
+			chrome.tabs.sendMessage(activeTabId, {
+				type: "background",
+				timer: result,
+			});
+		} catch (err) {
+			console.log(err);
+		}
+	}
+}
 
 // Resetting timer daily
 function setDefaultTimerDaily() {
