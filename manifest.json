@@ -17,7 +17,7 @@
       "matches": ["<all_urls>"], 
       "js": ["dist/content.js"] ,
       "css": ["src/content.css"],       
-      "run_at": "document_end"
+      "run_at": "document_start"
     }
   ],
   
