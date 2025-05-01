@@ -115,14 +115,16 @@ setDefaultTimerDaily();
 async function updateTimerState(tab) {
 	if (tab && tab.url && isYouTubeURL(tab.url)) {
 		// Continue timer when user return to a yt tab
-		getTimerData()
-			.then((result) => {
-				timerHandler.stopTimer();
-				timerHandler.startTimer(result.minutes, result.seconds);
-			})
-			.catch((err) => {
-				console.log(err);
-			});
+		try {
+			const result = await getTimerData();
+			if (!result) {
+				throw new Error("Error getting timer data from local storage");
+			}
+			timerHandler.stopTimer();
+			timerHandler.startTimer(result.minutes, result.seconds);
+		} catch (err) {
+			console.log("Update timer state error: ", err);
+		}
 	} else {
 		// Stop timer when user leaves yt tab
 		timerHandler.stopTimer();
@@ -136,19 +138,18 @@ function isYouTubeURL(url) {
 // Retrieve a global setting
 async function getTimerData() {
 	return new Promise(async (resolve, reject) => {
-		chrome.storage.local.get([STORAGE_TIMER_KEY], (result) => {
+		chrome.storage.local.get([STORAGE_TIMER_KEY], async (result) => {
 			if (chrome.runtime.lastError) {
 				reject(chrome.runtime.lastError);
 				return;
 			} else {
 				if (!result[STORAGE_TIMER_KEY]) {
-					setTimerData(defaultTimer)
-						.then(() => {
-							resolve(defaultTimer);
-						})
-						.catch((err) => {
-							reject(err);
-						});
+					try {
+						await setTimerData(defaultTimer);
+						resolve(defaultTimer);
+					} catch (err) {
+						reject(err);
+					}
 				} else {
 					resolve(result[STORAGE_TIMER_KEY]);
 				}
