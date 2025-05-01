@@ -8,7 +8,7 @@ class TimerUI {
 		timerContainer.classList.add("timer-container");
 
 		const timer = document.createElement("p");
-		timer.style.fontFamily = "'Rubik', sans-serif";
+		timer.style.fontFamily = "'Rubik', serif";
 
 		timerContainer.appendChild(timer);
 		document.body.appendChild(timerContainer);
@@ -33,6 +33,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 	}
 
 	if (request.type === "createTimerElement") {
+		injectGoogleFonts();
 		timerUI.createTimerElem();
 	}
 });
@@ -45,4 +46,3 @@ function injectGoogleFonts() {
 		"https://fonts.googleapis.com/css2?family=Rubik:wght@400;600&display=swap";
 	document.head.appendChild(link);
 }
-injectGoogleFonts();

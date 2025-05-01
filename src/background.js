@@ -4,7 +4,6 @@ const defaultTimer = { minutes: 0, seconds: 0 };
 class Timer {
 	constructor() {
 		this.timer = null;
-		this.timerElem = null;
 	}
 
 	startTimer(minutes = 0, seconds = 0) {
@@ -34,7 +33,6 @@ chrome.tabs.onUpdated.addListener(async function (tabId, changeInfo, tab) {
 			chrome.tabs.sendMessage(tabId, {
 				type: "createTimerElement",
 			});
-			sendTimerData();
 		}
 
 		setDefaultTimerDaily();
@@ -48,10 +46,6 @@ chrome.tabs.onActivated.addListener(async function (activeInfo) {
 		if (tab && tab.url) {
 			setDefaultTimerDaily();
 			updateTimerState(tab);
-
-			if (isYouTubeURL(tab.url)) {
-				sendTimerData();
-			}
 		}
 	});
 });
