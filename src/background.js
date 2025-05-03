@@ -40,6 +40,23 @@ chrome.tabs.onUpdated.addListener(async function (tabId, changeInfo, tab) {
 	}
 });
 
+chrome.windows.onFocusChanged.addListener(async function (windowId) {
+	if (windowId == chrome.windows.WINDOW_ID_NONE) {
+		timerHandler.stopTimer();
+	} else {
+		try {
+			const result = await getTimerData();
+			if (!result) {
+				throw new Error("Error getting timer data from local storage");
+			}
+			timerHandler.stopTimer();
+			timerHandler.startTimer(result.minutes, result.seconds);
+		} catch (err) {
+			console.log("Update timer state error: ", err);
+		}
+	}
+});
+
 // Start/Stop timer when a YouTube tab is active
 chrome.tabs.onActivated.addListener(async function (activeInfo) {
 	chrome.tabs.get(activeInfo.tabId, async function (tab) {
@@ -51,7 +68,7 @@ chrome.tabs.onActivated.addListener(async function (activeInfo) {
 });
 
 async function getCurrentTab() {
-	let queryOptions = { active: true, lastFocusedWindow: true };
+	const queryOptions = { active: true, currentWindow: true };
 	try {
 		let [tab] = await chrome.tabs.query(queryOptions);
 		return tab;
@@ -60,6 +77,7 @@ async function getCurrentTab() {
 	}
 }
 
+// TODO: Only be responsible for sending data. Not validating URL
 async function sendTimerData() {
 	let tab = await getCurrentTab();
 
