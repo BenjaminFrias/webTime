@@ -14,7 +14,7 @@ class Timer {
 				seconds = 0;
 			}
 
-			setTimerData({ minutes, seconds });
+			setData(STORAGE_TIMER_KEY, { minutes, seconds });
 			sendTimerData();
 		}, 1000);
 	}
@@ -47,7 +47,7 @@ chrome.windows.onFocusChanged.addListener(async function (windowId) {
 		timerHandler.stopTimer();
 	} else {
 		try {
-			const result = await getTimerData();
+			const result = await getData(STORAGE_TIMER_KEY);
 			if (!result) {
 				throw new Error("Error getting timer data from local storage");
 			}
@@ -87,7 +87,7 @@ async function sendTimerData() {
 		let activeTabId = tab.id;
 
 		try {
-			const result = await getTimerData();
+			const result = await getData(STORAGE_TIMER_KEY);
 			if (!result) {
 				throw new Error("Error at getting data: ", result);
 			}
@@ -117,8 +117,8 @@ function setDefaultTimerDaily() {
 			// Check for new day with local storage value
 			if (today != result[STORAGE_LAST_DAY_KEY]) {
 				console.log("It's a new day... setting default timer");
-				setTimerData(defaultTimer);
-				chrome.storage.local.set({ [STORAGE_LAST_DAY_KEY]: today });
+				setData(STORAGE_TIMER_KEY, defaultTimer);
+				setData(STORAGE_LAST_DAY_KEY, today);
 			}
 		}
 	});
@@ -130,7 +130,7 @@ async function updateTimerState(tab) {
 	if (tab && tab.url && isYouTubeURL(tab.url)) {
 		// Continue timer when user return to a yt tab
 		try {
-			const result = await getTimerData();
+			const result = await getData(STORAGE_TIMER_KEY);
 			if (!result) {
 				throw new Error("Error getting timer data from local storage");
 			}
@@ -186,11 +186,11 @@ async function ensureDefaultData(key, defaultValue) {
 // } else {
 // }
 
-async function setTimerData(timer) {
+async function setData(key, value) {
 	return new Promise((resolve, reject) => {
-		chrome.storage.local.set({ [STORAGE_TIMER_KEY]: timer }, () => {
+		chrome.storage.local.set({ [key]: value }, () => {
 			if (chrome.runtime.lastError) {
-				console.error("Error setting timer:", chrome.runtime.lastError);
+				console.error("Error setting data:", chrome.runtime.lastError);
 				reject(chrome.runtime.lastError);
 			} else {
 				resolve();
