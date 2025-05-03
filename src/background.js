@@ -25,7 +25,16 @@ class Timer {
 }
 const timerHandler = new Timer();
 
-function initializeExtension() {}
+async function initializeExtension() {
+	const defaultTimer = { minutes: 0, seconds: 0 };
+	await ensureDefaultData(STORAGE_TIMER_KEY, defaultTimer);
+
+	const today = new Date().toLocaleDateString();
+	await ensureDefaultData(STORAGE_LAST_DAY_KEY, today);
+}
+// Initialize extension on install/startup
+chrome.runtime.onInstalled.addListener(initializeExtension);
+chrome.runtime.onStartup.addListener(initializeExtension);
 
 // Start timer when new YouTube tab is open
 chrome.tabs.onUpdated.addListener(async function (tabId, changeInfo, tab) {
@@ -163,18 +172,6 @@ async function getData(key) {
 	});
 }
 
-async function ensureDefaultData(key, defaultValue) {
-	try {
-		const existingData = await getData(key);
-
-		if (existingData === undefined || existingData === null) {
-			await setData(key, defaultValue);
-		}
-	} catch (error) {
-		console.error("Error in ensureDefaultData:", error);
-	}
-}
-
 //  IF data doesn't exist set it
 // if (!result[STORAGE_TIMER_KEY]) {
 // 	try {
@@ -197,4 +194,16 @@ async function setData(key, value) {
 			}
 		});
 	});
+}
+
+async function ensureDefaultData(key, defaultValue) {
+	try {
+		const existingData = await getData(key);
+
+		if (existingData === undefined || existingData === null) {
+			await setData(key, defaultValue);
+		}
+	} catch (error) {
+		console.error("Error in ensureDefaultData:", error);
+	}
 }
