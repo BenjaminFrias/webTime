@@ -25,6 +25,8 @@ class Timer {
 }
 const timerHandler = new Timer();
 
+function initializeExtension() {}
+
 // Start timer when new YouTube tab is open
 chrome.tabs.onUpdated.addListener(async function (tabId, changeInfo, tab) {
 	if (changeInfo.status === "complete" && tab && tab.url) {
@@ -148,27 +150,41 @@ function isYouTubeURL(url) {
 }
 
 // Retrieve a global setting
-async function getTimerData() {
+async function getData(key) {
 	return new Promise(async (resolve, reject) => {
-		chrome.storage.local.get([STORAGE_TIMER_KEY], async (result) => {
+		chrome.storage.local.get([key], async (result) => {
 			if (chrome.runtime.lastError) {
 				reject(chrome.runtime.lastError);
 				return;
 			} else {
-				if (!result[STORAGE_TIMER_KEY]) {
-					try {
-						await setTimerData(defaultTimer);
-						resolve(defaultTimer);
-					} catch (err) {
-						reject(err);
-					}
-				} else {
-					resolve(result[STORAGE_TIMER_KEY]);
-				}
+				resolve(result[key]);
 			}
 		});
 	});
 }
+
+async function ensureDefaultData(key, defaultValue) {
+	try {
+		const existingData = await getData(key);
+
+		if (existingData === undefined || existingData === null) {
+			await setData(key, defaultValue);
+		}
+	} catch (error) {
+		console.error("Error in ensureDefaultData:", error);
+	}
+}
+
+//  IF data doesn't exist set it
+// if (!result[STORAGE_TIMER_KEY]) {
+// 	try {
+// 		await setTimerData(defaultTimer);
+// 		resolve(defaultTimer);
+// 	} catch (err) {
+// 		reject(err);
+// 	}
+// } else {
+// }
 
 async function setTimerData(timer) {
 	return new Promise((resolve, reject) => {
