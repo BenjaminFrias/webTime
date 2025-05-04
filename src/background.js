@@ -47,7 +47,7 @@ chrome.tabs.onUpdated.addListener(async function (tabId, changeInfo, tab) {
 			});
 		}
 
-		setDefaultTimerDaily();
+		resetTimerDaily();
 		updateTimerState(tab);
 	}
 });
@@ -74,7 +74,7 @@ chrome.windows.onFocusChanged.addListener(async function (windowId) {
 chrome.tabs.onActivated.addListener(async function (activeInfo) {
 	chrome.tabs.get(activeInfo.tabId, async function (tab) {
 		if (tab && tab.url) {
-			setDefaultTimerDaily();
+			resetTimerDaily();
 			updateTimerState(tab);
 		}
 	});
@@ -111,28 +111,23 @@ async function sendData(key, dataType) {
 }
 
 // Resetting timer daily
-// TODO:  Refactor this to only update daily storage to 0
-function setDefaultTimerDaily() {
+async function resetTimerDaily() {
 	const today = new Date().toLocaleDateString();
 
-	// Set default timer every new day
-	chrome.storage.local.get([STORAGE_LAST_DAY_KEY], (result) => {
-		if (!result[STORAGE_LAST_DAY_KEY]) {
-			// Storing current day in local storage
-			console.log("No previous date value... storing current day");
-			chrome.storage.local.set({ [STORAGE_LAST_DAY_KEY]: today });
-		} else {
-			console.log("Checking if it's a new day");
-			// Check for new day with local storage value
-			if (today != result[STORAGE_LAST_DAY_KEY]) {
-				console.log("It's a new day... setting default timer");
-				setData(STORAGE_TIMER_KEY, defaultTimer);
-				setData(STORAGE_LAST_DAY_KEY, today);
-			}
+	try {
+		const result = await getData(STORAGE_TIMER_KEY);
+		if (!result) {
+			throw new Error("Error getting timer data from local storage");
 		}
-	});
+
+		if (today != result[STORAGE_LAST_DAY_KEY]) {
+			setData(STORAGE_TIMER_KEY, defaultTimer);
+			setData(STORAGE_LAST_DAY_KEY, today);
+		}
+	} catch (err) {
+		console.log("resetTimerDaily error: ", err);
+	}
 }
-setDefaultTimerDaily();
 
 // handles starting/stopping the timer based on whether the tab is a YouTube tab.
 async function updateTimerState(tab) {
@@ -171,17 +166,6 @@ async function getData(key) {
 		});
 	});
 }
-
-//  IF data doesn't exist set it
-// if (!result[STORAGE_TIMER_KEY]) {
-// 	try {
-// 		await setTimerData(defaultTimer);
-// 		resolve(defaultTimer);
-// 	} catch (err) {
-// 		reject(err);
-// 	}
-// } else {
-// }
 
 async function setData(key, value) {
 	return new Promise((resolve, reject) => {
