@@ -2,12 +2,14 @@ const path = require("path");
 
 module.exports = {
 	mode: "production",
-	entry: "./src/content.js",
+	entry: {
+		background: "./src/background.js",
+		content: "./src/content.js",
+	},
 	output: {
-		filename: "content.js",
+		filename: "[name].js",
 		path: path.resolve(__dirname, "dist"),
 	},
-
 	module: {
 		rules: [
 			{
@@ -26,5 +28,6 @@ module.exports = {
 		fallback: {
 			path: false,
 		},
+		extensions: [".js"],
 	},
 };
