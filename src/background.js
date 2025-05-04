@@ -15,7 +15,7 @@ class Timer {
 			}
 
 			setData(STORAGE_TIMER_KEY, { minutes, seconds });
-			sendTimerData();
+			sendData(STORAGE_TIMER_KEY, "timer");
 		}, 1000);
 	}
 
@@ -32,6 +32,7 @@ async function initializeExtension() {
 	const today = new Date().toLocaleDateString();
 	await ensureDefaultData(STORAGE_LAST_DAY_KEY, today);
 }
+
 // Initialize extension on install/startup
 chrome.runtime.onInstalled.addListener(initializeExtension);
 chrome.runtime.onStartup.addListener(initializeExtension);
@@ -51,6 +52,7 @@ chrome.tabs.onUpdated.addListener(async function (tabId, changeInfo, tab) {
 	}
 });
 
+// Update timer on chrome window
 chrome.windows.onFocusChanged.addListener(async function (windowId) {
 	if (windowId == chrome.windows.WINDOW_ID_NONE) {
 		timerHandler.stopTimer();
@@ -88,30 +90,28 @@ async function getCurrentTab() {
 	}
 }
 
-// TODO: Only be responsible for sending data. Not validating URL
-async function sendTimerData() {
+// TODO: pass tab target as arg
+async function sendData(key, dataType) {
 	let tab = await getCurrentTab();
+	let activeTabId = tab.id;
 
-	if (tab && tab.url && isYouTubeURL(tab.url)) {
-		let activeTabId = tab.id;
-
-		try {
-			const result = await getData(STORAGE_TIMER_KEY);
-			if (!result) {
-				throw new Error("Error at getting data: ", result);
-			}
-
-			chrome.tabs.sendMessage(activeTabId, {
-				type: "background",
-				timer: result,
-			});
-		} catch (err) {
-			console.log(err);
+	try {
+		const result = await getData(key);
+		if (!result) {
+			throw new Error("Error at getting data: ", result);
 		}
+
+		chrome.tabs.sendMessage(activeTabId, {
+			type: "background",
+			[dataType]: result,
+		});
+	} catch (err) {
+		console.log(err);
 	}
 }
 
 // Resetting timer daily
+// TODO:  Refactor this to only update daily storage to 0
 function setDefaultTimerDaily() {
 	const today = new Date().toLocaleDateString();
 
