@@ -1,5 +1,5 @@
-const STORAGE_TIMER_KEY = "timer";
-const STORAGE_LAST_DAY_KEY = "lastSavedDay";
+const STORAGE_TIMER_KEY = 'timer';
+const STORAGE_LAST_DAY_KEY = 'lastSavedDay';
 const defaultTimer = { minutes: 0, seconds: 0 };
 class Timer {
 	constructor() {
@@ -15,7 +15,7 @@ class Timer {
 			}
 
 			setData(STORAGE_TIMER_KEY, { minutes, seconds });
-			sendData(STORAGE_TIMER_KEY, "timer");
+			sendData(STORAGE_TIMER_KEY, 'timer');
 		}, 1000);
 	}
 
@@ -39,11 +39,11 @@ chrome.runtime.onStartup.addListener(initializeExtension);
 
 // Start timer when new YouTube tab is open
 chrome.tabs.onUpdated.addListener(async function (tabId, changeInfo, tab) {
-	if (changeInfo.status === "complete" && tab && tab.url) {
+	if (changeInfo.status === 'complete' && tab && tab.url) {
 		// Create timer element in content.js
 		if (isYouTubeURL(tab.url)) {
 			chrome.tabs.sendMessage(tabId, {
-				type: "createTimerElement",
+				type: 'createTimerElement',
 			});
 		}
 
@@ -60,12 +60,12 @@ chrome.windows.onFocusChanged.addListener(async function (windowId) {
 		try {
 			const result = await getData(STORAGE_TIMER_KEY);
 			if (!result) {
-				throw new Error("Error getting timer data from local storage");
+				throw new Error('Error getting timer data from local storage');
 			}
 			timerHandler.stopTimer();
 			timerHandler.startTimer(result.minutes, result.seconds);
 		} catch (err) {
-			console.log("Update timer state error: ", err);
+			console.log('Update timer state error: ', err);
 		}
 	}
 });
@@ -90,7 +90,6 @@ async function getCurrentTab() {
 	}
 }
 
-// TODO: pass tab target as arg
 async function sendData(key, dataType) {
 	let tab = await getCurrentTab();
 	let activeTabId = tab.id;
@@ -98,11 +97,11 @@ async function sendData(key, dataType) {
 	try {
 		const result = await getData(key);
 		if (!result) {
-			throw new Error("Error at getting data: ", result);
+			throw new Error('Error at getting data: ', result);
 		}
 
 		chrome.tabs.sendMessage(activeTabId, {
-			type: "background",
+			type: 'background',
 			[dataType]: result,
 		});
 	} catch (err) {
@@ -112,20 +111,20 @@ async function sendData(key, dataType) {
 
 // Resetting timer daily
 async function resetTimerDaily() {
-	const today = new Date().toLocaleDateString();
-
 	try {
-		const result = await getData(STORAGE_TIMER_KEY);
+		const today = new Date().toLocaleDateString();
+		const prevDay = await getData(STORAGE_LAST_DAY_KEY);
+
 		if (!result) {
-			throw new Error("Error getting timer data from local storage");
+			throw new Error('Error getting timer data from local storage');
 		}
 
-		if (today != result[STORAGE_LAST_DAY_KEY]) {
+		if (today != prevDay) {
 			setData(STORAGE_TIMER_KEY, defaultTimer);
 			setData(STORAGE_LAST_DAY_KEY, today);
 		}
 	} catch (err) {
-		console.log("resetTimerDaily error: ", err);
+		console.log('resetTimerDaily error: ', err);
 	}
 }
 
@@ -136,12 +135,12 @@ async function updateTimerState(tab) {
 		try {
 			const result = await getData(STORAGE_TIMER_KEY);
 			if (!result) {
-				throw new Error("Error getting timer data from local storage");
+				throw new Error('Error getting timer data from local storage');
 			}
 			timerHandler.stopTimer();
 			timerHandler.startTimer(result.minutes, result.seconds);
 		} catch (err) {
-			console.log("Update timer state error: ", err);
+			console.log('Update timer state error: ', err);
 		}
 	} else {
 		// Stop timer when user leaves yt tab
@@ -150,7 +149,7 @@ async function updateTimerState(tab) {
 }
 
 function isYouTubeURL(url) {
-	return url && url.includes("youtube.com");
+	return url && url.includes('youtube.com');
 }
 
 // Retrieve a global setting
@@ -171,7 +170,7 @@ async function setData(key, value) {
 	return new Promise((resolve, reject) => {
 		chrome.storage.local.set({ [key]: value }, () => {
 			if (chrome.runtime.lastError) {
-				console.error("Error setting data:", chrome.runtime.lastError);
+				console.error('Error setting data:', chrome.runtime.lastError);
 				reject(chrome.runtime.lastError);
 			} else {
 				resolve();
@@ -188,6 +187,6 @@ async function ensureDefaultData(key, defaultValue) {
 			await setData(key, defaultValue);
 		}
 	} catch (error) {
-		console.error("Error in ensureDefaultData:", error);
+		console.error('Error in ensureDefaultData:', error);
 	}
 }

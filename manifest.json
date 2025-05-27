@@ -10,7 +10,7 @@
     "tabs"
   ],
   "background": {
-    "service_worker": "dist/background.js"
+    "service_worker": "src/background.js"
   },
   "content_scripts": [
     {

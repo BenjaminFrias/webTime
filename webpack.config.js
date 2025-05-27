@@ -7,8 +7,8 @@ module.exports = {
 		content: "./src/content.js",
 	},
 	output: {
-		filename: "[name].js",
 		path: path.resolve(__dirname, "dist"),
+		filename: "[name].js",
 	},
 	module: {
 		rules: [
@@ -28,6 +28,5 @@ module.exports = {
 		fallback: {
 			path: false,
 		},
-		extensions: [".js"],
 	},
 };
