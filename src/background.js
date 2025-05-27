@@ -1,3 +1,10 @@
+import {
+	getData,
+	setData,
+	sendData,
+	ensureDefaultData,
+} from './utils/dataUtils.js';
+
 const STORAGE_TIMER_KEY = 'timer';
 const STORAGE_LAST_DAY_KEY = 'lastSavedDay';
 const defaultTimer = { minutes: 0, seconds: 0 };
@@ -7,7 +14,7 @@ class Timer {
 	}
 
 	startTimer(minutes = 0, seconds = 0) {
-		this.timer = setInterval(() => {
+		this.timer = setInterval(async () => {
 			seconds++;
 			if (seconds > 59) {
 				minutes++;
@@ -80,35 +87,6 @@ chrome.tabs.onActivated.addListener(async function (activeInfo) {
 	});
 });
 
-async function getCurrentTab() {
-	const queryOptions = { active: true, currentWindow: true };
-	try {
-		let [tab] = await chrome.tabs.query(queryOptions);
-		return tab;
-	} catch (err) {
-		console.log(err);
-	}
-}
-
-async function sendData(key, dataType) {
-	let tab = await getCurrentTab();
-	let activeTabId = tab.id;
-
-	try {
-		const result = await getData(key);
-		if (!result) {
-			throw new Error('Error at getting data: ', result);
-		}
-
-		chrome.tabs.sendMessage(activeTabId, {
-			type: 'background',
-			[dataType]: result,
-		});
-	} catch (err) {
-		console.log(err);
-	}
-}
-
 // Resetting timer daily
 async function resetTimerDaily() {
 	try {
@@ -150,43 +128,4 @@ async function updateTimerState(tab) {
 
 function isYouTubeURL(url) {
 	return url && url.includes('youtube.com');
-}
-
-// Retrieve a global setting
-async function getData(key) {
-	return new Promise(async (resolve, reject) => {
-		chrome.storage.local.get([key], async (result) => {
-			if (chrome.runtime.lastError) {
-				reject(chrome.runtime.lastError);
-				return;
-			} else {
-				resolve(result[key]);
-			}
-		});
-	});
-}
-
-async function setData(key, value) {
-	return new Promise((resolve, reject) => {
-		chrome.storage.local.set({ [key]: value }, () => {
-			if (chrome.runtime.lastError) {
-				console.error('Error setting data:', chrome.runtime.lastError);
-				reject(chrome.runtime.lastError);
-			} else {
-				resolve();
-			}
-		});
-	});
-}
-
-async function ensureDefaultData(key, defaultValue) {
-	try {
-		const existingData = await getData(key);
-
-		if (existingData === undefined || existingData === null) {
-			await setData(key, defaultValue);
-		}
-	} catch (error) {
-		console.error('Error in ensureDefaultData:', error);
-	}
 }
