@@ -60,6 +60,7 @@ chrome.tabs.onUpdated.addListener(async function (tabId, changeInfo, tab) {
 });
 
 // Update timer on chrome window
+// TODO: Timer does not stop when changing window
 chrome.windows.onFocusChanged.addListener(async function (windowId) {
 	if (windowId == chrome.windows.WINDOW_ID_NONE) {
 		timerHandler.stopTimer();
@@ -93,7 +94,7 @@ async function resetTimerDaily() {
 		const today = new Date().toLocaleDateString();
 		const prevDay = await getData(STORAGE_LAST_DAY_KEY);
 
-		if (!result) {
+		if (!prevDay) {
 			throw new Error('Error getting timer data from local storage');
 		}
 
