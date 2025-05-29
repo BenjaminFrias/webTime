@@ -1,4 +1,5 @@
-import { getCurrentTab } from './tabUtils.js';
+import { getCurrentTab } from './tab.js';
+import { STORAGE_TIMER_KEY } from '../settings.js';
 
 export async function getData(key) {
 	return new Promise(async (resolve, reject) => {
@@ -55,4 +56,9 @@ export async function ensureDefaultData(key, defaultValue) {
 	} catch (error) {
 		console.error('Error in ensureDefaultData:', error);
 	}
+}
+
+export function tickHandler({ minutes, seconds }) {
+	sendData(STORAGE_TIMER_KEY, 'timer');
+	setData(STORAGE_TIMER_KEY, { minutes, seconds });
 }

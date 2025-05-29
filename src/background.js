@@ -1,36 +1,14 @@
 import {
 	getData,
 	setData,
-	sendData,
 	ensureDefaultData,
-} from './utils/dataUtils.js';
+	tickHandler,
+} from './utils/data.js';
+import { STORAGE_TIMER_KEY, STORAGE_LAST_DAY_KEY } from './settings.js';
+import { Timer } from './utils/timer.js';
 
-const STORAGE_TIMER_KEY = 'timer';
-const STORAGE_LAST_DAY_KEY = 'lastSavedDay';
 const defaultTimer = { minutes: 0, seconds: 0 };
-class Timer {
-	constructor() {
-		this.timer = null;
-	}
-
-	startTimer(minutes = 0, seconds = 0) {
-		this.timer = setInterval(async () => {
-			seconds++;
-			if (seconds > 59) {
-				minutes++;
-				seconds = 0;
-			}
-
-			setData(STORAGE_TIMER_KEY, { minutes, seconds });
-			sendData(STORAGE_TIMER_KEY, 'timer');
-		}, 1000);
-	}
-
-	stopTimer() {
-		clearInterval(this.timer);
-	}
-}
-const timerHandler = new Timer();
+const timerHandler = new Timer(tickHandler);
 
 async function initializeExtension() {
 	const defaultTimer = { minutes: 0, seconds: 0 };
@@ -60,7 +38,6 @@ chrome.tabs.onUpdated.addListener(async function (tabId, changeInfo, tab) {
 });
 
 // Update timer on chrome window
-// TODO: Timer does not stop when changing window
 chrome.windows.onFocusChanged.addListener(async function (windowId) {
 	if (windowId == chrome.windows.WINDOW_ID_NONE) {
 		timerHandler.stopTimer();
