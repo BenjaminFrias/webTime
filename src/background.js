@@ -6,6 +6,7 @@ import {
 } from './utils/data.js';
 import { STORAGE_TIMER_KEY, STORAGE_LAST_DAY_KEY } from './settings.js';
 import { Timer } from './utils/timer.js';
+import { isYouTubeURL } from './utils/tab.js';
 
 const defaultTimer = { hours: 0, minutes: 0, seconds: 0 };
 const timerHandler = new Timer(tickHandler);
@@ -101,8 +102,4 @@ async function updateTimerState(tab) {
 		// Stop timer when user leaves yt tab
 		timerHandler.stopTimer();
 	}
-}
-
-function isYouTubeURL(url) {
-	return url && url.includes('youtube.com');
 }

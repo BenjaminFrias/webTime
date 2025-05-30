@@ -7,3 +7,7 @@ export async function getCurrentTab() {
 		console.log(err);
 	}
 }
+
+export function isYouTubeURL(url) {
+	return url && url.includes('youtube.com');
+}
