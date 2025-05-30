@@ -4,7 +4,7 @@ export class Timer {
 		this.cb = cb;
 	}
 
-	startTimer(minutes = 0, seconds = 0) {
+	startTimer(hours = 0, minutes = 0, seconds = 0) {
 		this.timer = setInterval(async () => {
 			seconds++;
 			if (seconds > 59) {
@@ -12,7 +12,12 @@ export class Timer {
 				seconds = 0;
 			}
 
-			this.cb({ minutes: minutes, seconds: seconds });
+			if (minutes > 59) {
+				hours++;
+				minutes = 0;
+			}
+
+			this.cb({ hours: hours, minutes: minutes, seconds: seconds });
 		}, 1000);
 	}
 

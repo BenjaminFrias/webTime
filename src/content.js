@@ -4,10 +4,10 @@ class TimerUI {
 	}
 
 	createTimerElem() {
-		const timerContainer = document.createElement("div");
-		timerContainer.classList.add("timer-container");
+		const timerContainer = document.createElement('div');
+		timerContainer.classList.add('timer-container');
 
-		const timer = document.createElement("p");
+		const timer = document.createElement('p');
 		timer.style.fontFamily = "'Rubik', serif";
 
 		timerContainer.appendChild(timer);
@@ -16,10 +16,16 @@ class TimerUI {
 		this.timerElem = timer;
 	}
 
-	updateTimerElem({ minutes, seconds }) {
-		let minutesText = minutes <= 9 ? `0${minutes}` : minutes;
-		let secondsText = seconds <= 9 ? `0${seconds}` : seconds;
-		this.timerElem.textContent = `${minutesText}:${secondsText}`;
+	updateTimerElem({ hours, minutes, seconds }) {
+		let formmatedMin = minutes <= 9 ? `0${minutes}` : minutes;
+		let formmatedSec = seconds <= 9 ? `0${seconds}` : seconds;
+		let formmatedHours = hours <= 9 ? `0${hours}` : hours;
+
+		if (hours > 0) {
+			this.timerElem.textContent = `${formmatedHours}:${formmatedMin}:${formmatedSec}`;
+		} else {
+			this.timerElem.textContent = `${formmatedMin}:${formmatedSec}`;
+		}
 	}
 }
 
@@ -27,12 +33,12 @@ const timerUI = new TimerUI();
 
 // Get timer data from background.js
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
-	if (request.type === "background") {
+	if (request.type === 'background') {
 		const timerData = request.timer;
 		timerUI.updateTimerElem(timerData);
 	}
 
-	if (request.type === "createTimerElement") {
+	if (request.type === 'createTimerElement') {
 		injectGoogleFonts();
 		timerUI.createTimerElem();
 	}
@@ -40,9 +46,9 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 
 // Inject custom fonts in document
 function injectGoogleFonts() {
-	const link = document.createElement("link");
-	link.rel = "stylesheet";
+	const link = document.createElement('link');
+	link.rel = 'stylesheet';
 	link.href =
-		"https://fonts.googleapis.com/css2?family=Rubik:wght@400;600&display=swap";
+		'https://fonts.googleapis.com/css2?family=Rubik:wght@400;600&display=swap';
 	document.head.appendChild(link);
 }

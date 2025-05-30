@@ -7,11 +7,10 @@ import {
 import { STORAGE_TIMER_KEY, STORAGE_LAST_DAY_KEY } from './settings.js';
 import { Timer } from './utils/timer.js';
 
-const defaultTimer = { minutes: 0, seconds: 0 };
+const defaultTimer = { hours: 0, minutes: 0, seconds: 0 };
 const timerHandler = new Timer(tickHandler);
 
 async function initializeExtension() {
-	const defaultTimer = { minutes: 0, seconds: 0 };
 	await ensureDefaultData(STORAGE_TIMER_KEY, defaultTimer);
 
 	const today = new Date().toLocaleDateString();
@@ -48,7 +47,7 @@ chrome.windows.onFocusChanged.addListener(async function (windowId) {
 				throw new Error('Error getting timer data from local storage');
 			}
 			timerHandler.stopTimer();
-			timerHandler.startTimer(result.minutes, result.seconds);
+			timerHandler.startTimer(result.hours, result.minutes, result.seconds);
 		} catch (err) {
 			console.log('Update timer state error: ', err);
 		}
@@ -94,7 +93,7 @@ async function updateTimerState(tab) {
 				throw new Error('Error getting timer data from local storage');
 			}
 			timerHandler.stopTimer();
-			timerHandler.startTimer(result.minutes, result.seconds);
+			timerHandler.startTimer(result.hours, result.minutes, result.seconds);
 		} catch (err) {
 			console.log('Update timer state error: ', err);
 		}

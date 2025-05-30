@@ -14,9 +14,9 @@ export async function getData(key) {
 	});
 }
 
-export async function setData(key, value) {
+export async function setData(key, data) {
 	return new Promise((resolve, reject) => {
-		chrome.storage.local.set({ [key]: value }, () => {
+		chrome.storage.local.set({ [key]: data }, () => {
 			if (chrome.runtime.lastError) {
 				console.error('Error setting data:', chrome.runtime.lastError);
 				reject(chrome.runtime.lastError);
@@ -58,7 +58,7 @@ export async function ensureDefaultData(key, defaultValue) {
 	}
 }
 
-export function tickHandler({ minutes, seconds }) {
+export function tickHandler({ hours, minutes, seconds }) {
 	sendData(STORAGE_TIMER_KEY, 'timer');
-	setData(STORAGE_TIMER_KEY, { minutes, seconds });
+	setData(STORAGE_TIMER_KEY, { hours, minutes, seconds });
 }
