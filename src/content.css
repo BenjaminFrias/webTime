@@ -11,7 +11,7 @@ body {
 	left: 50%;
 	transform: translateX(-50%);
 	bottom: 10px;
-	width: 110px;
+	width: max-content;
 	height: 45px;
 	box-sizing: border-box;
 	background: rgb(24, 24, 24);
