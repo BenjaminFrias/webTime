@@ -1,4 +1,4 @@
-import { getCurrentTab } from './tab.js';
+import { getCurrentTab, isYouTubeURL } from './tab.js';
 import { STORAGE_TIMER_KEY } from '../settings.js';
 
 export async function getData(key) {
@@ -37,10 +37,12 @@ export async function sendData(key, dataType) {
 		const tab = await getCurrentTab();
 		const tabTarget = tab.id;
 
-		chrome.tabs.sendMessage(tabTarget, {
-			type: 'background',
-			[dataType]: result,
-		});
+		if (isYouTubeURL(tab.url)) {
+			chrome.tabs.sendMessage(tabTarget, {
+				type: 'background',
+				[dataType]: result,
+			});
+		}
 	} catch (err) {
 		console.log(err);
 	}
