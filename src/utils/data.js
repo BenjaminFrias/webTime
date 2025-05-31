@@ -67,6 +67,9 @@ export async function tickHandler({ trackedURL, hours, minutes, seconds }) {
 	setData(STORAGE_TIMER_KEY, timerData);
 
 	const trackedData = await getData(TRACKED_DATA);
-	const newTrackedData = { ...trackedData, [trackedURL]: timerData };
+	const newTrackedData = {
+		...trackedData,
+		[trackedURL]: { ...trackedData[trackedURL], ['timer']: timerData },
+	};
 	setData(TRACKED_DATA, newTrackedData);
 }

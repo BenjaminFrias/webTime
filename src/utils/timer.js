@@ -1,8 +1,8 @@
 export class Timer {
-	constructor(cb) {
+	constructor(cb, trackedURL) {
 		this.timer = null;
 		this.cb = cb;
-		this.timerURL = 'youtube.com';
+		this.trackedURL = trackedURL;
 	}
 
 	startTimer(hours = 0, minutes = 0, seconds = 0) {
@@ -19,7 +19,7 @@ export class Timer {
 			}
 
 			this.cb({
-				trackedURL: this.timerURL,
+				trackedURL: this.trackedURL,
 				hours: hours,
 				minutes: minutes,
 				seconds: seconds,

@@ -12,12 +12,14 @@ import {
 import { Timer } from './utils/timer.js';
 import { isYouTubeURL } from './utils/tab.js';
 
+const CURRENT_TRACKED = 'youtube.com';
+
 const defaultTimer = { hours: 0, minutes: 0, seconds: 0 };
-const timerHandler = new Timer(tickHandler);
+const timerHandler = new Timer(tickHandler, CURRENT_TRACKED);
 
 async function initializeExtension() {
 	const trackedData = {
-		'youtube.com': { timer: defaultTimer },
+		defaultTimer: { timer: defaultTimer },
 	};
 
 	await ensureDefaultData(TRACKED_DATA, trackedData);
@@ -94,17 +96,20 @@ async function resetTimerDaily() {
 	}
 }
 
-// handles starting/stopping the timer based on whether the tab is a YouTube tab.
+// handles starting/stopping the timer based on whether the tab is a tracked tab.
 async function updateTimerState(tab) {
 	if (tab && tab.url && isYouTubeURL(tab.url)) {
 		// Continue timer when user return to a yt tab
 		try {
-			const result = await getData(STORAGE_TIMER_KEY);
-			if (!result) {
+			const result = await getData(TRACKED_DATA);
+			const timer = result[CURRENT_TRACKED]['timer'];
+
+			if (!timer) {
 				throw new Error('Error getting timer data from local storage');
 			}
+
 			timerHandler.stopTimer();
-			timerHandler.startTimer(result.hours, result.minutes, result.seconds);
+			timerHandler.startTimer(timer.hours, timer.minutes, timer.seconds);
 		} catch (err) {
 			console.log('Update timer state error: ', err);
 		}
