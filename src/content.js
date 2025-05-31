@@ -12,13 +12,13 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 	if (request.type === 'createTimerElement') {
 		if (!timerUI.timerElem) {
 			timerUI.createTimerElem();
-			injectGoogleFonts();
+			injectCustomFont();
 		}
 	}
 });
 
 // Inject custom fonts in document
-function injectGoogleFonts() {
+function injectCustomFont() {
 	const link = document.createElement('link');
 	link.rel = 'stylesheet';
 	link.href =
