@@ -10,8 +10,10 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 	}
 
 	if (request.type === 'createTimerElement') {
-		injectGoogleFonts();
-		timerUI.createTimerElem();
+		if (!timerUI.timerElem) {
+			timerUI.createTimerElem();
+			injectGoogleFonts();
+		}
 	}
 });
 
