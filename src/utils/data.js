@@ -1,5 +1,5 @@
 import { getCurrentTab, isYouTubeURL } from './tab.js';
-import { STORAGE_TIMER_KEY, TRACKED_DATA } from '../settings.js';
+import { TRACKED_DATA_KEY } from '../settings.js';
 
 export async function getData(key) {
 	return new Promise(async (resolve, reject) => {
@@ -27,25 +27,15 @@ export async function setData(key, data) {
 	});
 }
 
-export async function sendData(key, dataType) {
-	try {
-		const result = await getData(key);
-		if (!result) {
-			throw new Error('Error at getting data: ', result);
-		}
+export async function sendData(dataType, data) {
+	// TODO: Move getting current tab logic to tick handler
+	const tab = await getCurrentTab();
+	const tabTarget = tab.id;
 
-		const tab = await getCurrentTab();
-		const tabTarget = tab.id;
-
-		if (isYouTubeURL(tab.url)) {
-			chrome.tabs.sendMessage(tabTarget, {
-				type: 'background',
-				[dataType]: result,
-			});
-		}
-	} catch (err) {
-		console.log(err);
-	}
+	chrome.tabs.sendMessage(tabTarget, {
+		type: 'background',
+		[dataType]: data,
+	});
 }
 
 export async function ensureDefaultData(key, defaultValue) {
@@ -63,13 +53,12 @@ export async function ensureDefaultData(key, defaultValue) {
 export async function tickHandler({ trackedURL, hours, minutes, seconds }) {
 	const timerData = { hours, minutes, seconds };
 
-	sendData(STORAGE_TIMER_KEY, 'timer');
-	setData(STORAGE_TIMER_KEY, timerData);
+	sendData('timer', timerData);
 
-	const trackedData = await getData(TRACKED_DATA);
+	const trackedData = await getData(TRACKED_DATA_KEY);
 	const newTrackedData = {
 		...trackedData,
 		[trackedURL]: { ...trackedData[trackedURL], ['timer']: timerData },
 	};
-	setData(TRACKED_DATA, newTrackedData);
+	setData(TRACKED_DATA_KEY, newTrackedData);
 }

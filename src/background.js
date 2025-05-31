@@ -4,11 +4,7 @@ import {
 	ensureDefaultData,
 	tickHandler,
 } from './utils/data.js';
-import {
-	STORAGE_TIMER_KEY,
-	STORAGE_LAST_DAY_KEY,
-	TRACKED_DATA,
-} from './settings.js';
+import { STORAGE_LAST_DAY_KEY, TRACKED_DATA_KEY } from './settings.js';
 import { Timer } from './utils/timer.js';
 import { isYouTubeURL } from './utils/tab.js';
 
@@ -22,9 +18,7 @@ async function initializeExtension() {
 		defaultTimer: { timer: defaultTimer },
 	};
 
-	await ensureDefaultData(TRACKED_DATA, trackedData);
-
-	await ensureDefaultData(STORAGE_TIMER_KEY, defaultTimer);
+	await ensureDefaultData(TRACKED_DATA_KEY, trackedData);
 
 	const today = new Date().toLocaleDateString();
 	await ensureDefaultData(STORAGE_LAST_DAY_KEY, today);
@@ -55,12 +49,15 @@ chrome.windows.onFocusChanged.addListener(async function (windowId) {
 		timerHandler.stopTimer();
 	} else {
 		try {
-			const result = await getData(STORAGE_TIMER_KEY);
-			if (!result) {
+			const result = await getData(TRACKED_DATA_KEY);
+			const timer = result[CURRENT_TRACKED]['timer'];
+
+			if (!timer) {
 				throw new Error('Error getting timer data from local storage');
 			}
+
 			timerHandler.stopTimer();
-			timerHandler.startTimer(result.hours, result.minutes, result.seconds);
+			timerHandler.startTimer(timer.hours, timer.minutes, timer.seconds);
 		} catch (err) {
 			console.log('Update timer state error: ', err);
 		}
@@ -88,7 +85,19 @@ async function resetTimerDaily() {
 		}
 
 		if (today != prevDay) {
-			setData(STORAGE_TIMER_KEY, defaultTimer);
+			const trackedData = await getData(TRACKED_DATA_KEY);
+
+			if (!trackedData) {
+				throw new Error('Error while resetting timers: ', err);
+			}
+
+			Object.keys(trackedData).forEach((key) => {
+				if (trackedData[key] === 'object') {
+					trackedData[key].timer = defaultTimer;
+				}
+			});
+
+			setData(TRACKED_DATA_KEY, trackedData);
 			setData(STORAGE_LAST_DAY_KEY, today);
 		}
 	} catch (err) {
@@ -101,7 +110,7 @@ async function updateTimerState(tab) {
 	if (tab && tab.url && isYouTubeURL(tab.url)) {
 		// Continue timer when user return to a yt tab
 		try {
-			const result = await getData(TRACKED_DATA);
+			const result = await getData(TRACKED_DATA_KEY);
 			const timer = result[CURRENT_TRACKED]['timer'];
 
 			if (!timer) {
