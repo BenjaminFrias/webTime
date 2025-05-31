@@ -4,7 +4,11 @@ import {
 	ensureDefaultData,
 	tickHandler,
 } from './utils/data.js';
-import { STORAGE_TIMER_KEY, STORAGE_LAST_DAY_KEY } from './settings.js';
+import {
+	STORAGE_TIMER_KEY,
+	STORAGE_LAST_DAY_KEY,
+	TRACKED_DATA,
+} from './settings.js';
 import { Timer } from './utils/timer.js';
 import { isYouTubeURL } from './utils/tab.js';
 
@@ -12,6 +16,12 @@ const defaultTimer = { hours: 0, minutes: 0, seconds: 0 };
 const timerHandler = new Timer(tickHandler);
 
 async function initializeExtension() {
+	const trackedData = {
+		'youtube.com': { timer: defaultTimer },
+	};
+
+	await ensureDefaultData(TRACKED_DATA, trackedData);
+
 	await ensureDefaultData(STORAGE_TIMER_KEY, defaultTimer);
 
 	const today = new Date().toLocaleDateString();

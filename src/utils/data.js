@@ -1,5 +1,5 @@
 import { getCurrentTab, isYouTubeURL } from './tab.js';
-import { STORAGE_TIMER_KEY } from '../settings.js';
+import { STORAGE_TIMER_KEY, TRACKED_DATA } from '../settings.js';
 
 export async function getData(key) {
 	return new Promise(async (resolve, reject) => {
@@ -60,7 +60,13 @@ export async function ensureDefaultData(key, defaultValue) {
 	}
 }
 
-export function tickHandler({ hours, minutes, seconds }) {
+export async function tickHandler({ trackedURL, hours, minutes, seconds }) {
+	const timerData = { hours, minutes, seconds };
+
 	sendData(STORAGE_TIMER_KEY, 'timer');
-	setData(STORAGE_TIMER_KEY, { hours, minutes, seconds });
+	setData(STORAGE_TIMER_KEY, timerData);
+
+	const trackedData = await getData(TRACKED_DATA);
+	const newTrackedData = { ...trackedData, [trackedURL]: timerData };
+	setData(TRACKED_DATA, newTrackedData);
 }
