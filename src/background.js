@@ -6,7 +6,7 @@ import {
 } from './utils/data.js';
 import { STORAGE_LAST_DAY_KEY, TRACKED_DATA_KEY } from './settings.js';
 import { Timer } from './utils/timer.js';
-import { isYouTubeURL } from './utils/tab.js';
+import { addWebToTrack, isTrackedURL } from './utils/tab.js';
 
 const CURRENT_TRACKED = 'youtube.com';
 
@@ -14,9 +14,7 @@ const defaultTimer = { hours: 0, minutes: 0, seconds: 0 };
 const timerHandler = new Timer(tickHandler, CURRENT_TRACKED);
 
 async function initializeExtension() {
-	const trackedData = {
-		defaultTimer: { timer: defaultTimer },
-	};
+	const trackedData = { default: { timer: defaultTimer } };
 
 	await ensureDefaultData(TRACKED_DATA_KEY, trackedData);
 
@@ -31,15 +29,19 @@ chrome.runtime.onStartup.addListener(initializeExtension);
 // Start timer when new YouTube tab is open
 chrome.tabs.onUpdated.addListener(async function (tabId, changeInfo, tab) {
 	if (changeInfo.status === 'complete' && tab && tab.url) {
-		// Create timer element in content.js
-		if (isYouTubeURL(tab.url)) {
-			chrome.tabs.sendMessage(tabId, {
-				type: 'createTimerElement',
-			});
-		}
+		try {
+			// Create timer element in content.js
+			if (await isTrackedURL(tab.url)) {
+				chrome.tabs.sendMessage(tabId, {
+					type: 'createTimerElement',
+				});
+			}
 
-		resetTimerDaily();
-		updateTimerState(tab);
+			updateTimerState(tab);
+			resetTimerDaily();
+		} catch (error) {
+			console.log(error);
+		}
 	}
 });
 
@@ -50,10 +52,13 @@ chrome.windows.onFocusChanged.addListener(async function (windowId) {
 	} else {
 		try {
 			const result = await getData(TRACKED_DATA_KEY);
-			const timer = result[CURRENT_TRACKED]['timer'];
+			if (!result) {
+				throw new Error('Error retrieving timer data');
+			}
 
+			const timer = result[CURRENT_TRACKED]['timer'];
 			if (!timer) {
-				throw new Error('Error getting timer data from local storage');
+				throw new Error('Error getting timer data from tracked data');
 			}
 
 			timerHandler.stopTimer();
@@ -67,10 +72,10 @@ chrome.windows.onFocusChanged.addListener(async function (windowId) {
 // Start/Stop timer when a YouTube tab is active
 chrome.tabs.onActivated.addListener(async function (activeInfo) {
 	chrome.tabs.get(activeInfo.tabId, async function (tab) {
-		if (tab && tab.url) {
-			resetTimerDaily();
+		if (tab && tab.url && (await isTrackedURL(tab.url))) {
 			updateTimerState(tab);
 		}
+		resetTimerDaily();
 	});
 });
 
@@ -107,7 +112,7 @@ async function resetTimerDaily() {
 
 // handles starting/stopping the timer based on whether the tab is a tracked tab.
 async function updateTimerState(tab) {
-	if (tab && tab.url && isYouTubeURL(tab.url)) {
+	if (tab && tab.url && (await isTrackedURL(tab.url))) {
 		// Continue timer when user return to a yt tab
 		try {
 			const result = await getData(TRACKED_DATA_KEY);

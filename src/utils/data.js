@@ -1,4 +1,4 @@
-import { getCurrentTab, isYouTubeURL } from './tab.js';
+import { getCurrentTab } from './tab.js';
 import { TRACKED_DATA_KEY } from '../settings.js';
 
 export async function getData(key) {
