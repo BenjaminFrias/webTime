@@ -30,7 +30,7 @@ export async function setData(key, data) {
 export async function sendData(dataType, data) {
 	// TODO: Move getting current tab logic to tick handler
 	const tab = await getCurrentTab();
-	const tabTarget = tab.id;
+	const tabTarget = tab['id'];
 
 	chrome.tabs.sendMessage(tabTarget, {
 		type: 'background',
@@ -48,17 +48,4 @@ export async function ensureDefaultData(key, defaultValue) {
 	} catch (error) {
 		console.error('Error in ensureDefaultData:', error);
 	}
-}
-
-export async function tickHandler({ trackedURL, hours, minutes, seconds }) {
-	const timerData = { hours, minutes, seconds };
-
-	sendData('timer', timerData);
-
-	const trackedData = await getData(TRACKED_DATA_KEY);
-	const newTrackedData = {
-		...trackedData,
-		[trackedURL]: { ...trackedData[trackedURL], ['timer']: timerData },
-	};
-	setData(TRACKED_DATA_KEY, newTrackedData);
 }

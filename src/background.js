@@ -1,22 +1,16 @@
-import {
-	getData,
-	setData,
-	ensureDefaultData,
-	tickHandler,
-} from './utils/data.js';
+import { getData, setData, ensureDefaultData } from './utils/data.js';
 import { STORAGE_LAST_DAY_KEY, TRACKED_DATA_KEY } from './settings.js';
 import { Timer } from './utils/timer.js';
-import { addWebToTrack, isTrackedURL } from './utils/tab.js';
+import { isTrackedURL, addWebToTrack } from './utils/tab.js';
 
-const CURRENT_TRACKED = 'youtube.com';
+let websiteTimers = {};
+let currentTimer = null;
+let CURRENT_TRACKED = '';
 
 const defaultTimer = { hours: 0, minutes: 0, seconds: 0 };
-const timerHandler = new Timer(tickHandler, CURRENT_TRACKED);
 
 async function initializeExtension() {
-	const trackedData = { default: { timer: defaultTimer } };
-
-	await ensureDefaultData(TRACKED_DATA_KEY, trackedData);
+	await ensureDefaultData(TRACKED_DATA_KEY, websiteTimers);
 
 	const today = new Date().toLocaleDateString();
 	await ensureDefaultData(STORAGE_LAST_DAY_KEY, today);
@@ -30,14 +24,24 @@ chrome.runtime.onStartup.addListener(initializeExtension);
 chrome.tabs.onUpdated.addListener(async function (tabId, changeInfo, tab) {
 	if (changeInfo.status === 'complete' && tab && tab.url) {
 		try {
+			if (currentTimer) {
+				currentTimer = null;
+			}
+
 			// Create timer element in content.js
 			if (await isTrackedURL(tab.url)) {
+				const timerData = await getTimerData(tab.url);
+				currentTimer = new Timer(tab.url);
+				currentTimer.startTimer(timerData);
+
 				chrome.tabs.sendMessage(tabId, {
 					type: 'createTimerElement',
 				});
 			}
 
-			updateTimerState(tab);
+			if (currentTimer) {
+				updateTimerState(tab);
+			}
 			resetTimerDaily();
 		} catch (error) {
 			console.log(error);
@@ -46,38 +50,57 @@ chrome.tabs.onUpdated.addListener(async function (tabId, changeInfo, tab) {
 });
 
 // Update timer on chrome window
-chrome.windows.onFocusChanged.addListener(async function (windowId) {
-	if (windowId == chrome.windows.WINDOW_ID_NONE) {
-		timerHandler.stopTimer();
-	} else {
-		try {
-			const result = await getData(TRACKED_DATA_KEY);
-			if (!result) {
-				throw new Error('Error retrieving timer data');
-			}
+// chrome.windows.onFocusChanged.addListener(async function (windowId) {
+// 	if (windowId == chrome.windows.WINDOW_ID_NONE) {
+// 		currentTimer.stopTimer();
+// 	} else {
+// 		try {
+// 			const result = await getData(TRACKED_DATA_KEY);
+// 			if (!result) {
+// 				throw new Error('Error retrieving timer data');
+// 			}
 
-			const timer = result[CURRENT_TRACKED]['timer'];
-			if (!timer) {
-				throw new Error('Error getting timer data from tracked data');
-			}
+// 			const timer = result[CURRENT_TRACKED]['timer'];
+// 			if (!timer) {
+// 				throw new Error('Error getting timer data from tracked data');
+// 			}
 
-			timerHandler.stopTimer();
-			timerHandler.startTimer(timer.hours, timer.minutes, timer.seconds);
-		} catch (err) {
-			console.log('Update timer state error: ', err);
-		}
-	}
-});
+// 			currentTimer.stopTimer();
+// 			currentTimer.startTimer(timer.hours, timer.minutes, timer.seconds);
+// 		} catch (err) {
+// 			console.log('Update timer state error: ', err);
+// 		}
+// 	}
+// });
 
 // Start/Stop timer when a YouTube tab is active
-chrome.tabs.onActivated.addListener(async function (activeInfo) {
-	chrome.tabs.get(activeInfo.tabId, async function (tab) {
-		if (tab && tab.url && (await isTrackedURL(tab.url))) {
-			updateTimerState(tab);
+// chrome.tabs.onActivated.addListener(async function (activeInfo) {
+// 	chrome.tabs.get(activeInfo.tabId, async function (tab) {
+// 		if (tab && tab.url && (await isTrackedURL(tab.url))) {
+// 			updateTimerState(tab);
+// 		}
+// 		resetTimerDaily();
+// 	});
+// });
+
+// Get url time data
+async function getTimerData(url) {
+	try {
+		const result = await getData(TRACKED_DATA_KEY);
+		if (!result) {
+			throw new Error('Error retrieving timer data');
 		}
-		resetTimerDaily();
-	});
-});
+
+		const timer = result[url]['timer'];
+		if (!timer) {
+			throw new Error('Error getting timer data from tracked data');
+		}
+
+		return timer;
+	} catch (error) {
+		console.log(error);
+	}
+}
 
 // Resetting timer daily
 async function resetTimerDaily() {
@@ -116,19 +139,19 @@ async function updateTimerState(tab) {
 		// Continue timer when user return to a yt tab
 		try {
 			const result = await getData(TRACKED_DATA_KEY);
-			const timer = result[CURRENT_TRACKED]['timer'];
+			const timer = result[tab.url]['timer'];
 
 			if (!timer) {
 				throw new Error('Error getting timer data from local storage');
 			}
 
-			timerHandler.stopTimer();
-			timerHandler.startTimer(timer.hours, timer.minutes, timer.seconds);
+			currentTimer.stopTimer();
+			currentTimer.startTimer(timer.hours, timer.minutes, timer.seconds);
 		} catch (err) {
 			console.log('Update timer state error: ', err);
 		}
 	} else {
 		// Stop timer when user leaves yt tab
-		timerHandler.stopTimer();
+		currentTimer.stopTimer();
 	}
 }

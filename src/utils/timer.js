@@ -1,7 +1,9 @@
+import { TRACKED_DATA_KEY } from '../settings.js';
+import { getData, sendData, setData } from './data.js';
+
 export class Timer {
-	constructor(cb, trackedURL) {
+	constructor(trackedURL) {
 		this.timer = null;
-		this.cb = cb;
 		this.trackedURL = trackedURL;
 	}
 
@@ -18,7 +20,7 @@ export class Timer {
 				minutes = 0;
 			}
 
-			this.cb({
+			tick({
 				trackedURL: this.trackedURL,
 				hours: hours,
 				minutes: minutes,
@@ -30,4 +32,17 @@ export class Timer {
 	stopTimer() {
 		clearInterval(this.timer);
 	}
+}
+
+export async function tick({ trackedURL, hours, minutes, seconds }) {
+	const timerData = { hours: hours, minutes: minutes, seconds: seconds };
+
+	sendData('timer', timerData);
+
+	const trackedData = await getData(TRACKED_DATA_KEY);
+	const newTrackedData = {
+		...trackedData,
+		[trackedURL]: { ...trackedData[trackedURL], ['timer']: timerData },
+	};
+	setData(TRACKED_DATA_KEY, newTrackedData);
 }
