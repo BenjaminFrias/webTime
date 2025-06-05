@@ -13,11 +13,13 @@ export async function getCurrentTab() {
 
 export async function isTrackedURL(url) {
 	try {
+		if (!url) return false;
+
 		const websites = await getData(TRACKED_DATA_KEY);
 
 		let isTracked = false;
 		Object.keys(websites).forEach((web) => {
-			if (url && url.includes(web)) {
+			if (web.includes(url)) {
 				isTracked = true;
 			}
 		});
