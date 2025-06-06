@@ -7,7 +7,7 @@ export class Timer {
 		this.trackedURL = trackedURL;
 	}
 
-	startTimer(hours = 0, minutes = 0, seconds = 0) {
+	startTimer({ hours, minutes, seconds }) {
 		this.timer = setInterval(async () => {
 			seconds++;
 			if (seconds > 59) {
@@ -34,10 +34,10 @@ export class Timer {
 	}
 }
 
-export async function tick({ trackedURL, hours, minutes, seconds }) {
+async function tick({ trackedURL, hours, minutes, seconds }) {
 	const timerData = { hours: hours, minutes: minutes, seconds: seconds };
 
-	sendData('timer', timerData);
+	await sendData('timer', timerData);
 
 	const trackedData = await getData(TRACKED_DATA_KEY);
 	const newTrackedData = {

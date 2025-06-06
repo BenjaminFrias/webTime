@@ -28,7 +28,6 @@ export async function setData(key, data) {
 }
 
 export async function sendData(dataType, data) {
-	// TODO: Move getting current tab logic to tick handler
 	const tab = await getCurrentTab();
 	const tabTarget = tab['id'];
 

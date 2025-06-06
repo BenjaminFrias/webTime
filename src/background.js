@@ -4,8 +4,7 @@ import { Timer } from './utils/timer.js';
 import { isTrackedURL, addWebToTrack } from './utils/tab.js';
 
 let websiteTimers = {};
-let currentTimer = null;
-let CURRENT_TRACKED = '';
+let currentTimer = new Timer('https://www.youtube.com/');
 
 const defaultTimer = { hours: 0, minutes: 0, seconds: 0 };
 
@@ -24,14 +23,10 @@ chrome.runtime.onStartup.addListener(initializeExtension);
 chrome.tabs.onUpdated.addListener(async function (tabId, changeInfo, tab) {
 	if (changeInfo.status === 'complete' && tab && tab.url) {
 		try {
-			if (currentTimer) {
-				currentTimer = null;
-			}
-
 			// Create timer element in content.js
 			if (await isTrackedURL(tab.url)) {
 				const timerData = await getTimerData(tab.url);
-				currentTimer = new Timer(tab.url);
+
 				currentTimer.startTimer(timerData);
 
 				chrome.tabs.sendMessage(tabId, {
@@ -39,9 +34,7 @@ chrome.tabs.onUpdated.addListener(async function (tabId, changeInfo, tab) {
 				});
 			}
 
-			if (currentTimer) {
-				updateTimerState(tab);
-			}
+			updateTimerState(tab);
 			resetTimerDaily();
 		} catch (error) {
 			console.log(error);
@@ -74,14 +67,12 @@ chrome.tabs.onUpdated.addListener(async function (tabId, changeInfo, tab) {
 // });
 
 // Start/Stop timer when a YouTube tab is active
-// chrome.tabs.onActivated.addListener(async function (activeInfo) {
-// 	chrome.tabs.get(activeInfo.tabId, async function (tab) {
-// 		if (tab && tab.url && (await isTrackedURL(tab.url))) {
-// 			updateTimerState(tab);
-// 		}
-// 		resetTimerDaily();
-// 	});
-// });
+chrome.tabs.onActivated.addListener(async function (activeInfo) {
+	chrome.tabs.get(activeInfo.tabId, async function (tab) {
+		updateTimerState(tab);
+		resetTimerDaily();
+	});
+});
 
 // Get url time data
 async function getTimerData(url) {
@@ -146,7 +137,12 @@ async function updateTimerState(tab) {
 			}
 
 			currentTimer.stopTimer();
-			currentTimer.startTimer(timer.hours, timer.minutes, timer.seconds);
+			const timerData = {
+				hours: timer.hours,
+				minutes: timer.minutes,
+				seconds: timer.seconds,
+			};
+			currentTimer.startTimer(timerData);
 		} catch (err) {
 			console.log('Update timer state error: ', err);
 		}
