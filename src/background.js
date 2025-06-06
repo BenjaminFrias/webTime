@@ -25,10 +25,6 @@ chrome.tabs.onUpdated.addListener(async function (tabId, changeInfo, tab) {
 		try {
 			// Create timer element in content.js
 			if (await isTrackedURL(tab.url)) {
-				const timerData = await getTimerData(tab.url);
-
-				currentTimer.startTimer(timerData);
-
 				chrome.tabs.sendMessage(tabId, {
 					type: 'createTimerElement',
 				});
