@@ -1,8 +1,18 @@
+@font-face {
+	font-family: 'Rubik';
+	font-style: normal;
+	font-weight: 600;
+	src: url('chrome-extension://__MSG_@@extension_id__/src/fonts/Rubik-SemiBold.ttf')
+		format('truetype');
+}
+
 body {
 	margin: 0;
+	font-family: 'Rubik', sans-serif;
 }
 
 .timer-container {
+	font-family: 'Rubik', sans-serif;
 	display: flex;
 	justify-content: center;
 	align-items: center;
@@ -24,6 +34,7 @@ body {
 
 .timer-container > p {
 	color: #a3a3a3;
+	font-family: 'Rubik', sans-serif;
 	font-weight: 600;
 	font-size: 30px;
 	padding: 0;
