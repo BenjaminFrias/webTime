@@ -2,12 +2,11 @@ import { TRACKED_DATA_KEY } from '../settings.js';
 import { getData, sendData, setData } from './data.js';
 
 export class Timer {
-	constructor(trackedURL) {
+	constructor() {
 		this.timer = null;
-		this.trackedURL = trackedURL;
 	}
 
-	startTimer({ hours, minutes, seconds }) {
+	startTimer({ hours, minutes, seconds }, trackedURL) {
 		this.timer = setInterval(async () => {
 			seconds++;
 			if (seconds > 59) {
@@ -21,7 +20,7 @@ export class Timer {
 			}
 
 			tick({
-				trackedURL: this.trackedURL,
+				trackedURL: trackedURL,
 				hours: hours,
 				minutes: minutes,
 				seconds: seconds,

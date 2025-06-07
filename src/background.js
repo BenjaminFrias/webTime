@@ -1,10 +1,10 @@
 import { getData, setData, ensureDefaultData } from './utils/data.js';
 import { STORAGE_LAST_DAY_KEY, TRACKED_DATA_KEY } from './settings.js';
 import { Timer } from './utils/timer.js';
-import { isTrackedURL, addWebToTrack } from './utils/tab.js';
+import { isTrackedURL, addWebToTrack, getHostname } from './utils/tab.js';
 
 let websiteTimers = {};
-let currentTimer = new Timer('https://www.youtube.com/');
+let currentTimer = new Timer();
 
 const defaultTimer = { hours: 0, minutes: 0, seconds: 0 };
 
@@ -19,7 +19,7 @@ async function initializeExtension() {
 chrome.runtime.onInstalled.addListener(initializeExtension);
 chrome.runtime.onStartup.addListener(initializeExtension);
 
-// Start timer when new YouTube tab is open
+// Start timer when new tracked tab is open
 chrome.tabs.onUpdated.addListener(async function (tabId, changeInfo, tab) {
 	if (changeInfo.status === 'complete' && tab && tab.url) {
 		try {
@@ -62,7 +62,7 @@ chrome.tabs.onUpdated.addListener(async function (tabId, changeInfo, tab) {
 // 	}
 // });
 
-// Start/Stop timer when a YouTube tab is active
+// Start/Stop timer when a tracked tab is active
 chrome.tabs.onActivated.addListener(async function (activeInfo) {
 	chrome.tabs.get(activeInfo.tabId, async function (tab) {
 		updateTimerState(tab);
@@ -138,7 +138,9 @@ async function updateTimerState(tab) {
 				minutes: timer.minutes,
 				seconds: timer.seconds,
 			};
-			currentTimer.startTimer(timerData);
+
+			// TODO: Start timer with specific url to send data to that url
+			currentTimer.startTimer(timerData, tab.url);
 		} catch (err) {
 			console.log('Update timer state error: ', err);
 		}

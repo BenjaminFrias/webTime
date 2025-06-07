@@ -48,3 +48,12 @@ export async function addWebToTrack(newUrl) {
 		throw new Error('Failed at adding new website: ', error);
 	}
 }
+
+export function getHostname(fullUrl) {
+	try {
+		const url = new URL(fullUrl);
+		return url.origin + '/';
+	} catch (error) {
+		throw new Error('Invalid url provided.');
+	}
+}
