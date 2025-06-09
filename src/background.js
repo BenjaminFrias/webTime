@@ -24,7 +24,7 @@ chrome.tabs.onUpdated.addListener(async function (tabId, changeInfo, tab) {
 	if (changeInfo.status === 'complete' && tab && tab.url) {
 		try {
 			// Create timer element in content.js
-			if (await isTrackedURL(tab.url)) {
+			if (await isTrackedURL(getHostname(tab.url))) {
 				chrome.tabs.sendMessage(tabId, {
 					type: 'createTimerElement',
 				});
@@ -65,8 +65,10 @@ chrome.tabs.onUpdated.addListener(async function (tabId, changeInfo, tab) {
 // Start/Stop timer when a tracked tab is active
 chrome.tabs.onActivated.addListener(async function (activeInfo) {
 	chrome.tabs.get(activeInfo.tabId, async function (tab) {
-		updateTimerState(tab);
-		resetTimerDaily();
+		if (tab && tab.url) {
+			updateTimerState(tab);
+			resetTimerDaily();
+		}
 	});
 });
 
@@ -122,11 +124,16 @@ async function resetTimerDaily() {
 
 // handles starting/stopping the timer based on whether the tab is a tracked tab.
 async function updateTimerState(tab) {
-	if (tab && tab.url && (await isTrackedURL(tab.url))) {
+	if (!tab || !tab.url) {
+		throw new Error('Tab is undefined');
+	}
+
+	const trackedWeb = getHostname(tab.url);
+	if (await isTrackedURL(trackedWeb)) {
 		// Continue timer when user return to a yt tab
 		try {
 			const result = await getData(TRACKED_DATA_KEY);
-			const timer = result[tab.url]['timer'];
+			const timer = result[trackedWeb]['timer'];
 
 			if (!timer) {
 				throw new Error('Error getting timer data from local storage');
@@ -139,12 +146,12 @@ async function updateTimerState(tab) {
 				seconds: timer.seconds,
 			};
 
-			currentTimer.startTimer(timerData, tab.url);
+			currentTimer.startTimer(timerData, trackedWeb);
 		} catch (err) {
 			console.log('Update timer state error: ', err);
 		}
 	} else {
-		// Stop timer when user leaves yt tab
+		// Stop timer when user leaves tracked tab
 		currentTimer.stopTimer();
 	}
 }
