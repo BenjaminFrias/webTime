@@ -8,7 +8,6 @@ export class TimerUI {
 		timerContainer.classList.add('timer-container');
 
 		const timer = document.createElement('p');
-		timer.style.fontFamily = "'Rubik', serif";
 
 		timerContainer.appendChild(timer);
 		document.body.appendChild(timerContainer);
