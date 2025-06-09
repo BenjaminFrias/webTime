@@ -1,15 +1,19 @@
 import { getData, setData, ensureDefaultData } from './utils/data.js';
 import { STORAGE_LAST_DAY_KEY, TRACKED_DATA_KEY } from './settings.js';
 import { Timer } from './utils/timer.js';
-import { isTrackedURL, addWebToTrack, getHostname } from './utils/tab.js';
+import {
+	isTrackedURL,
+	addWebToTrack,
+	getHostname,
+	getCurrentTab,
+} from './utils/tab.js';
 
-let websiteTimers = {};
 let currentTimer = new Timer();
 
 const defaultTimer = { hours: 0, minutes: 0, seconds: 0 };
 
 async function initializeExtension() {
-	await ensureDefaultData(TRACKED_DATA_KEY, websiteTimers);
+	await ensureDefaultData(TRACKED_DATA_KEY, {});
 
 	const today = new Date().toLocaleDateString();
 	await ensureDefaultData(STORAGE_LAST_DAY_KEY, today);
@@ -39,28 +43,20 @@ chrome.tabs.onUpdated.addListener(async function (tabId, changeInfo, tab) {
 });
 
 // Update timer on chrome window
-// chrome.windows.onFocusChanged.addListener(async function (windowId) {
-// 	if (windowId == chrome.windows.WINDOW_ID_NONE) {
-// 		currentTimer.stopTimer();
-// 	} else {
-// 		try {
-// 			const result = await getData(TRACKED_DATA_KEY);
-// 			if (!result) {
-// 				throw new Error('Error retrieving timer data');
-// 			}
+chrome.windows.onFocusChanged.addListener(async function (windowId) {
+	if (!currentTimer) {
+		return;
+	}
 
-// 			const timer = result[CURRENT_TRACKED]['timer'];
-// 			if (!timer) {
-// 				throw new Error('Error getting timer data from tracked data');
-// 			}
-
-// 			currentTimer.stopTimer();
-// 			currentTimer.startTimer(timer.hours, timer.minutes, timer.seconds);
-// 		} catch (err) {
-// 			console.log('Update timer state error: ', err);
-// 		}
-// 	}
-// });
+	if (windowId == chrome.windows.WINDOW_ID_NONE) {
+		// OUTSIDE CHROME
+		currentTimer.stopTimer();
+	} else {
+		// IN A CHROME WINDOW
+		const tab = await getCurrentTab();
+		updateTimerState(tab);
+	}
+});
 
 // Start/Stop timer when a tracked tab is active
 chrome.tabs.onActivated.addListener(async function (activeInfo) {
