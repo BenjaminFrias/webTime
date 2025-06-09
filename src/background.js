@@ -139,7 +139,6 @@ async function updateTimerState(tab) {
 				seconds: timer.seconds,
 			};
 
-			// TODO: Start timer with specific url to send data to that url
 			currentTimer.startTimer(timerData, tab.url);
 		} catch (err) {
 			console.log('Update timer state error: ', err);
