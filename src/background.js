@@ -98,7 +98,6 @@ async function initializeExtension() {
 }
 
 // Resetting timer daily
-// TODO: Reset all timers every day
 async function resetTimerDaily() {
 	try {
 		const today = new Date().toLocaleDateString();
@@ -116,7 +115,7 @@ async function resetTimerDaily() {
 			}
 
 			Object.keys(trackedData).forEach((key) => {
-				if (trackedData[key] === 'object') {
+				if (typeof trackedData[key] === 'object') {
 					trackedData[key].timer = defaultTimer;
 				}
 			});
