@@ -65,8 +65,8 @@ chrome.tabs.onActivated.addListener(async function (activeInfo) {
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 	(async () => {
 		if (request.action === 'addNewWebsite') {
-			const newUrl = request.data.newUrl;
-			// TODO: add current website instead of letting user input the web
+			const currentTab = await getCurrentTab();
+			const newUrl = currentTab.url;
 
 			try {
 				await addWebToTrack(getHostname(newUrl));
