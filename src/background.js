@@ -12,13 +12,6 @@ let currentTimer = new Timer();
 
 const defaultTimer = { hours: 0, minutes: 0, seconds: 0 };
 
-async function initializeExtension() {
-	await ensureDefaultData(TRACKED_DATA_KEY, {});
-
-	const today = new Date().toLocaleDateString();
-	await ensureDefaultData(STORAGE_LAST_DAY_KEY, today);
-}
-
 // Initialize extension on install/startup
 chrome.runtime.onInstalled.addListener(initializeExtension);
 chrome.runtime.onStartup.addListener(initializeExtension);
@@ -68,7 +61,44 @@ chrome.tabs.onActivated.addListener(async function (activeInfo) {
 	});
 });
 
+// Add website message listener
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+	(async () => {
+		if (request.action === 'addNewWebsite') {
+			const newUrl = request.data.newUrl;
+			// TODO: add current website instead of letting user input the web
+
+			try {
+				await addWebToTrack(getHostname(newUrl));
+				sendResponse({
+					status: 'success',
+					message: 'Website added',
+				});
+			} catch (error) {
+				console.error(
+					'Background: Failed to add new website to track. ERROR: ',
+					error
+				);
+				sendResponse({
+					status: 'error',
+					message: error,
+				});
+			}
+		}
+	})();
+	return true;
+});
+
+// Ensure default data for local storage
+async function initializeExtension() {
+	await ensureDefaultData(TRACKED_DATA_KEY, {});
+
+	const today = new Date().toLocaleDateString();
+	await ensureDefaultData(STORAGE_LAST_DAY_KEY, today);
+}
+
 // Resetting timer daily
+// TODO: Reset all timers every day
 async function resetTimerDaily() {
 	try {
 		const today = new Date().toLocaleDateString();
