@@ -47,7 +47,7 @@ export async function addWebToTrack(newUrl) {
 
 		await setData(TRACKED_DATA_KEY, newTrackedData);
 	} catch (error) {
-		throw new Error('Failed at adding new website: ', error);
+		throw new Error(error);
 	}
 }
 

@@ -1,5 +1,6 @@
 document.addEventListener('DOMContentLoaded', function () {
-	const newWebBtn = document.getElementById('newWebButton');
+	const newWebBtn = document.querySelector('#newWebButton');
+	const newWebResult = document.querySelector('#addResult');
 
 	newWebBtn.addEventListener('click', () => {
 		chrome.runtime.sendMessage(
@@ -8,11 +9,19 @@ document.addEventListener('DOMContentLoaded', function () {
 			},
 			function (response) {
 				if (response && response.status === 'success') {
-					// TODO: Show message to user
-					console.log(response.message);
-					window.close();
+					newWebResult.textContent = response.message;
+					setTimeout(() => {
+						newWebResult.textContent = '';
+					}, 2000);
+
+					setTimeout(() => {
+						window.close();
+					}, 1000);
 				} else {
-					console.error('Failed to send form data to background.');
+					newWebResult.textContent = response.message;
+					setTimeout(() => {
+						newWebResult.textContent = '';
+					}, 2000);
 				}
 			}
 		);
