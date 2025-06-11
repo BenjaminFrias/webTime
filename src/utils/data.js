@@ -48,3 +48,24 @@ export async function ensureDefaultData(key, defaultValue) {
 		console.error('Error in ensureDefaultData:', error);
 	}
 }
+
+export async function addWebToTrack(newUrl) {
+	try {
+		const trackedData = await getData(TRACKED_DATA_KEY);
+		if (trackedData[newUrl]) {
+			throw new Error('Website is already being tracked.');
+		}
+
+		const newTrackedData = {
+			...trackedData,
+			[newUrl]: {
+				...trackedData[newUrl],
+				['timer']: { hours: 0, minutes: 0, seconds: 0 },
+			},
+		};
+
+		await setData(TRACKED_DATA_KEY, newTrackedData);
+	} catch (error) {
+		throw new Error(error);
+	}
+}
