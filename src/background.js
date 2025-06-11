@@ -1,12 +1,12 @@
-import { getData, setData, ensureDefaultData } from './utils/data.js';
+import {
+	getData,
+	setData,
+	ensureDefaultData,
+	addWebToTrack,
+} from './utils/data.js';
 import { STORAGE_LAST_DAY_KEY, TRACKED_DATA_KEY } from './settings.js';
 import { Timer } from './utils/timer.js';
-import {
-	isTrackedURL,
-	addWebToTrack,
-	getHostname,
-	getCurrentTab,
-} from './utils/tab.js';
+import { isTrackedURL, getHostname, getCurrentTab } from './utils/tab.js';
 
 let currentTimer = new Timer();
 
@@ -21,7 +21,7 @@ chrome.tabs.onUpdated.addListener(async function (tabId, changeInfo, tab) {
 	if (changeInfo.status === 'complete' && tab && tab.url) {
 		try {
 			// Create timer element in content.js
-			if (await isTrackedURL(getHostname(tab.url))) {
+			if (await isTrackedURL(tab.url)) {
 				chrome.tabs.sendMessage(tabId, {
 					type: 'createTimerElement',
 				});
@@ -134,8 +134,7 @@ async function updateTimerState(tab) {
 		throw new Error('Tab is undefined');
 	}
 
-	const trackedWeb = getHostname(tab.url);
-	if (await isTrackedURL(trackedWeb)) {
+	if (await isTrackedURL(tab.url)) {
 		// Continue timer when user return to a yt tab
 		try {
 			const result = await getData(TRACKED_DATA_KEY);
