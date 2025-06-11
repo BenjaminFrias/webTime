@@ -20,8 +20,8 @@ export async function isTrackedURL(url) {
 	try {
 		if (!url) return false;
 
-		const hostname = getHostname(url);
 		const websites = await getData(TRACKED_DATA_KEY);
+		const hostname = getHostname(url);
 
 		let isTracked = false;
 		Object.keys(websites).forEach((web) => {
@@ -32,7 +32,7 @@ export async function isTrackedURL(url) {
 
 		return isTracked;
 	} catch (error) {
-		throw new Error('Error fetching websites data: ', error);
+		throw new Error(`Error fetching websites data: ${error}`);
 	}
 }
 

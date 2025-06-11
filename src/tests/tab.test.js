@@ -140,6 +140,7 @@ describe('isTrackedUrl', () => {
 	});
 
 	test('should return false if the provided URL is empty or null', async () => {
+		// getData shouldn't even be called if url is falsy
 		const resultNull = await isTrackedURL(null);
 		expect(resultNull).toBe(false);
 		expect(getData).not.toHaveBeenCalled();
@@ -151,5 +152,18 @@ describe('isTrackedUrl', () => {
 		const resultUndefined = await isTrackedURL(undefined);
 		expect(resultUndefined).toBe(false);
 		expect(getData).not.toHaveBeenCalled();
+	});
+
+	test('should throw an error if getData fails', async () => {
+		const mockError = new Error('Storage access denied');
+		getData.mockRejectedValueOnce(mockError);
+
+		const expectedErrorMessage = `Error fetching websites data: ${mockError}`;
+
+		await expect(isTrackedURL('some-url.com')).rejects.toThrow(
+			expectedErrorMessage
+		);
+
+		expect(getData).toHaveBeenCalledWith(TRACKED_DATA_KEY);
 	});
 });
