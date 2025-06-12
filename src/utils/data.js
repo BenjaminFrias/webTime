@@ -30,7 +30,6 @@ export async function sendData(dataType, data) {
 	const tab = await getCurrentTab();
 	if (!tab) {
 		console.warn('Could not get current tab. Message not sent.');
-
 		return;
 	}
 	const tabTarget = tab['id'];
