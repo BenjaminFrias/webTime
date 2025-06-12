@@ -19,7 +19,7 @@ export class Timer {
 				minutes = 0;
 			}
 
-			tick({
+			this._tick({
 				trackedURL: trackedURL,
 				hours: hours,
 				minutes: minutes,
@@ -31,17 +31,22 @@ export class Timer {
 	stopTimer() {
 		clearInterval(this.timer);
 	}
-}
 
-export async function tick({ trackedURL, hours, minutes, seconds }) {
-	const timerData = { hours: hours, minutes: minutes, seconds: seconds };
+	async _tick({ trackedURL, hours, minutes, seconds }) {
+		const timerData = { hours: hours, minutes: minutes, seconds: seconds };
 
-	await sendData('timer', timerData);
+		await sendData('timer', timerData);
 
-	const trackedData = await getData(TRACKED_DATA_KEY);
-	const newTrackedData = {
-		...trackedData,
-		[trackedURL]: { ...trackedData[trackedURL], ['timer']: timerData },
-	};
-	setData(TRACKED_DATA_KEY, newTrackedData);
+		const trackedData = await getData(TRACKED_DATA_KEY);
+		const safeTrackedData = trackedData || {};
+
+		const newTrackedData = {
+			...safeTrackedData,
+			[trackedURL]: {
+				...(safeTrackedData[trackedURL] || {}),
+				timer: timerData,
+			},
+		};
+		await setData(TRACKED_DATA_KEY, newTrackedData);
+	}
 }
