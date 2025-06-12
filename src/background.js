@@ -137,6 +137,7 @@ async function updateTimerState(tab) {
 	if (await isTrackedURL(tab.url)) {
 		// Continue timer when user return to a yt tab
 		try {
+			const trackedWeb = getHostname(tab.url);
 			const result = await getData(TRACKED_DATA_KEY);
 			const timer = result[trackedWeb]['timer'];
 

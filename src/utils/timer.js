@@ -33,7 +33,7 @@ export class Timer {
 	}
 }
 
-async function tick({ trackedURL, hours, minutes, seconds }) {
+export async function tick({ trackedURL, hours, minutes, seconds }) {
 	const timerData = { hours: hours, minutes: minutes, seconds: seconds };
 
 	await sendData('timer', timerData);
