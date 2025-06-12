@@ -18,7 +18,6 @@ export async function setData(key, data) {
 	return new Promise((resolve, reject) => {
 		chrome.storage.local.set({ [key]: data }, () => {
 			if (chrome.runtime.lastError) {
-				console.error('Error setting data:', chrome.runtime.lastError);
 				reject(chrome.runtime.lastError);
 			} else {
 				resolve();
@@ -29,6 +28,11 @@ export async function setData(key, data) {
 
 export async function sendData(dataType, data) {
 	const tab = await getCurrentTab();
+	if (!tab) {
+		console.warn('Could not get current tab. Message not sent.');
+
+		return;
+	}
 	const tabTarget = tab['id'];
 
 	chrome.tabs.sendMessage(tabTarget, {
