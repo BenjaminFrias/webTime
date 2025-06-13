@@ -1,4 +1,4 @@
-import { TimerUI } from './utils/timerUI.js';
+const { TimerUI } = require('./utils/timerUI.js');
 
 const timerUI = new TimerUI();
 
