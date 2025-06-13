@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', function () {
+function initPopup() {
 	const newWebBtn = document.querySelector('#newWebButton');
 	const newWebResult = document.querySelector('#addResult');
 
@@ -26,4 +26,6 @@ document.addEventListener('DOMContentLoaded', function () {
 			}
 		);
 	});
-});
+}
+
+module.exports = { initPopup };
