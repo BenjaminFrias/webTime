@@ -52,13 +52,17 @@ chrome.windows.onFocusChanged.addListener(async function (windowId) {
 });
 
 // Start/Stop timer when a tracked tab is active
-chrome.tabs.onActivated.addListener(async function (activeInfo) {
-	chrome.tabs.get(activeInfo.tabId, async function (tab) {
+chrome.tabs.onActivated.addListener(async (activeInfo) => {
+	try {
+		// Use the utility function you are already mocking in tests
+		const tab = await getCurrentTab(activeInfo.tabId);
 		if (tab && tab.url) {
 			updateTimerState(tab);
 			resetTimerDaily();
 		}
-	});
+	} catch (error) {
+		console.log(error);
+	}
 });
 
 // Add website message listener
@@ -90,7 +94,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 });
 
 // Ensure default data for local storage
-async function initializeExtension() {
+export async function initializeExtension() {
 	await ensureDefaultData(TRACKED_DATA_KEY, {});
 
 	const today = new Date().toLocaleDateString();
@@ -98,7 +102,7 @@ async function initializeExtension() {
 }
 
 // Resetting timer daily
-async function resetTimerDaily() {
+export async function resetTimerDaily() {
 	try {
 		const today = new Date().toLocaleDateString();
 		const prevDay = await getData(STORAGE_LAST_DAY_KEY);
@@ -111,7 +115,7 @@ async function resetTimerDaily() {
 			const trackedData = await getData(TRACKED_DATA_KEY);
 
 			if (!trackedData) {
-				throw new Error('Error while resetting timers: ', err);
+				throw new Error('Error while resetting timers');
 			}
 
 			Object.keys(trackedData).forEach((key) => {
@@ -129,7 +133,7 @@ async function resetTimerDaily() {
 }
 
 // handles starting/stopping the timer based on whether the tab is a tracked tab.
-async function updateTimerState(tab) {
+export async function updateTimerState(tab) {
 	if (!tab || !tab.url) {
 		throw new Error('Tab is undefined');
 	}
