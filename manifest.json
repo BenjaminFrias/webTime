@@ -1,6 +1,6 @@
 {
   "manifest_version": 3, 
-  "name": "WebTime tracker",
+  "name": "WebTime",
   "version": "1.0",
   "description": "A timer for tracking my time in certain websties",
   "permissions": [
@@ -8,7 +8,8 @@
     "activeTab",
     "scripting",
     "tabs",
-    "windows"
+    "windows",
+    "alarms"
   ],
   "background": {
     "service_worker": "src/background.js",

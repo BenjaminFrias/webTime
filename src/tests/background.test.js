@@ -1,12 +1,14 @@
 // Mocking Chrome API and local functions
 const mockOnUpdatedAddListener = jest.fn((callback) => {
-	// This mock allows us to manually trigger the callback in our test
 	global.onUpdatedCallback = callback;
 });
 
 const mockOnActivatedAddListener = jest.fn((callback) => {
-	// Capture the callback passed to addListener
 	global.onActivatedListenerCallback = callback;
+});
+
+const mockAlarmOnAlarmAddListener = jest.fn((callback) => {
+	global.onAlarmFiredCallback = callback;
 });
 
 // Use this mock for chrome.tabs.sendMessage
@@ -60,6 +62,12 @@ global.chrome = {
 				Object.assign(mockChromeStorage, items);
 			}),
 		},
+	},
+	alarms: {
+		onAlarm: {
+			addListener: mockAlarmOnAlarmAddListener,
+		},
+		create: jest.fn(),
 	},
 };
 

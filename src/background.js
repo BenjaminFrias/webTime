@@ -4,7 +4,11 @@ import {
 	ensureDefaultData,
 	addWebToTrack,
 } from './utils/data.js';
-import { STORAGE_LAST_DAY_KEY, TRACKED_DATA_KEY } from './settings.js';
+import {
+	DAILY_RESET_ALARM_NAME,
+	STORAGE_LAST_DAY_KEY,
+	TRACKED_DATA_KEY,
+} from './settings.js';
 import { Timer } from './utils/timer.js';
 import { isTrackedURL, getHostname, getCurrentTab } from './utils/tab.js';
 
@@ -12,9 +16,49 @@ let currentTimer = new Timer();
 
 const defaultTimer = { hours: 0, minutes: 0, seconds: 0 };
 
+// Create alarm to reset timer every day
+async function setUpDailyResetAlarm() {
+	const alarm = await chrome.alarms.get(DAILY_RESET_ALARM_NAME);
+
+	if (!alarm) {
+		const now = new Date();
+		const midnight = new Date(
+			now.getFullYear(),
+			now.getMonth(),
+			now.getDate() + 1,
+			0,
+			0,
+			0
+		);
+
+		const delayInMinutes = Math.round(
+			(midnight.getTime() - now.getTime()) / 60000
+		);
+
+		chrome.alarms.create(DAILY_RESET_ALARM_NAME, {
+			delayInMinutes: delayInMinutes,
+			periodInMinutes: 1440,
+		});
+	}
+}
+
+// Listen for the daily reset alarm
+chrome.alarms.onAlarm.addListener(async (alarm) => {
+	if (alarm.name === DAILY_RESET_ALARM_NAME) {
+		resetTimerDaily();
+	}
+});
+
 // Initialize extension on install/startup
-chrome.runtime.onInstalled.addListener(initializeExtension);
-chrome.runtime.onStartup.addListener(initializeExtension);
+chrome.runtime.onInstalled.addListener(() => {
+	initializeExtension();
+	setUpDailyResetAlarm();
+});
+
+chrome.runtime.onStartup.addListener(() => {
+	initializeExtension();
+	setUpDailyResetAlarm();
+});
 
 // Start timer when new tracked tab is open
 chrome.tabs.onUpdated.addListener(async function (tabId, changeInfo, tab) {
@@ -28,7 +72,6 @@ chrome.tabs.onUpdated.addListener(async function (tabId, changeInfo, tab) {
 			}
 
 			updateTimerState(tab);
-			resetTimerDaily();
 		} catch (error) {
 			console.log(error);
 		}
@@ -58,7 +101,6 @@ chrome.tabs.onActivated.addListener(async (activeInfo) => {
 		const tab = await getCurrentTab(activeInfo.tabId);
 		if (tab && tab.url) {
 			updateTimerState(tab);
-			resetTimerDaily();
 		}
 	} catch (error) {
 		console.log(error);
