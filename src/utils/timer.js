@@ -2,8 +2,9 @@ import { TRACKED_DATA_KEY } from '../settings.js';
 import { getData, sendData, setData } from './data.js';
 
 export class Timer {
-	constructor() {
+	constructor(limit = null) {
 		this.timer = null;
+		this.limit = null;
 	}
 
 	startTimer({ hours, minutes, seconds }, trackedURL) {

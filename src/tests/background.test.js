@@ -3,6 +3,7 @@ const mockOnUpdatedAddListener = jest.fn((callback) => {
 	// This mock allows us to manually trigger the callback in our test
 	global.onUpdatedCallback = callback;
 });
+
 const mockOnActivatedAddListener = jest.fn((callback) => {
 	// Capture the callback passed to addListener
 	global.onActivatedListenerCallback = callback;
@@ -361,5 +362,27 @@ describe('background.js', () => {
 		});
 	});
 
-	// TODO: Test on activated listners
+	describe('chrome.tabs.onActivated.addListener', () => {
+		let consoleSpy;
+
+		beforeEach(() => {
+			consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+			getCurrentTab.mockResolvedValue(false);
+		});
+
+		afterEach(() => {
+			consoleSpy.mockRestore();
+		});
+
+		test('should do nothing when tab is not being tracked', async () => {
+			const tabId = 123;
+			const changeInfo = { status: 'complete' };
+			const tab = { id: tabId, url: 'https://example.com' };
+
+			await global.onActivatedListenerCallback(tabId, changeInfo, tab);
+			getCurrentTab.mockResolvedValue(false);
+
+			expect(getCurrentTab).toHaveBeenCalledTimes(1);
+		});
+	});
 });
