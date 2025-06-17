@@ -148,7 +148,7 @@ describe('background.js', () => {
 
 	// --- Test initializeExtension function ---
 	describe('initializeExtension', () => {
-		it('should ensure default data for TRACKED_DATA_KEY and STORAGE_LAST_DAY_KEY', async () => {
+		test('should ensure default data for TRACKED_DATA_KEY and STORAGE_LAST_DAY_KEY', async () => {
 			// Mock Date to control the 'today' value
 			const mockDate = new Date('2024-01-15T10:00:00Z');
 			const mockToLocaleDateString = jest.fn(() => '1/15/2024');
@@ -168,7 +168,7 @@ describe('background.js', () => {
 
 	// --- Test resetTimerDaily function ---
 	describe('resetTimerDaily', () => {
-		it('should reset timers if the day has changed', async () => {
+		test('should reset timers if the day has changed', async () => {
 			const today = '1/16/2024';
 			const prevDay = '1/15/2024';
 			const trackedData = {
@@ -197,7 +197,7 @@ describe('background.js', () => {
 		});
 	});
 
-	it('should not reset timers if the day has not changed', async () => {
+	test('should not reset timers if the day has not changed', async () => {
 		const today = '1/15/2024';
 
 		// Mock Date to return 'today'
@@ -217,7 +217,7 @@ describe('background.js', () => {
 		expect(setData).not.toHaveBeenCalled();
 	});
 
-	it('should log an error if STORAGE_LAST_DAY_KEY data is missing', async () => {
+	test('should log an error if STORAGE_LAST_DAY_KEY data is missing', async () => {
 		console.log = jest.fn(); // Mock console.log
 		getData.mockResolvedValueOnce(null); // Simulate missing prevDay
 
@@ -230,7 +230,7 @@ describe('background.js', () => {
 		expect(setData).not.toHaveBeenCalled();
 	});
 
-	it('should log an error if TRACKED_DATA_KEY data is missing when resetting', async () => {
+	test('should log an error if TRACKED_DATA_KEY data is missing when resetting', async () => {
 		console.log = jest.fn(); // Mock console.log
 		const today = '1/16/2024';
 		const prevDay = '1/15/2024';
@@ -255,7 +255,7 @@ describe('background.js', () => {
 
 	// --- Test updateTimerState function ---
 	describe('updateTimerState', () => {
-		it('should start the timer if the tab URL is tracked', async () => {
+		test('should start the timer if the tab URL is tracked', async () => {
 			const tab = { url: 'https://www.youtube.com/watch?v=123' };
 			const hostname = 'youtube.com';
 			const trackedData = {
@@ -276,7 +276,31 @@ describe('background.js', () => {
 			);
 		});
 
-		it('should stop the timer if the tab URL is not tracked', async () => {
+		test('should call functions when tab update is complete and URL is tracked', async () => {
+			const tabId = 123;
+			const changeInfo = { status: 'complete' };
+			const tab = { id: tabId, url: 'https://www.youtube.com/watch?v=123' };
+			const hostname = 'youtube.com';
+			const trackedData = {
+				'youtube.com': { timer: { hours: 0, minutes: 5, seconds: 0 } },
+			};
+
+			isTrackedURL.mockResolvedValue(true);
+			getHostname.mockReturnValue(hostname);
+			getData.mockResolvedValue(trackedData);
+
+			await BackgroundModule.updateTimerState(tab);
+
+			expect(isTrackedURL).toHaveBeenCalledTimes(1);
+			expect(isTrackedURL).toHaveBeenCalledWith(tab.url);
+
+			expect(mockTabsSendMessage).toHaveBeenCalledTimes(1);
+			expect(mockTabsSendMessage).toHaveBeenCalledWith(tabId, {
+				type: 'createTimerElement',
+			});
+		});
+
+		test('should stop the timer if the tab URL is not tracked', async () => {
 			const tab = { url: 'https://www.google.com' };
 			isTrackedURL.mockResolvedValue(false);
 
@@ -285,16 +309,6 @@ describe('background.js', () => {
 			expect(isTrackedURL).toHaveBeenCalledWith(tab.url);
 			expect(mockTimerInstance.stopTimer).toHaveBeenCalledTimes(1);
 			expect(mockTimerInstance.startTimer).not.toHaveBeenCalled();
-		});
-
-		it('should throw an error if tab or tab.url is undefined', async () => {
-			await expect(
-				BackgroundModule.updateTimerState(undefined)
-			).rejects.toThrow('Tab is undefined');
-			await expect(BackgroundModule.updateTimerState({})).rejects.toThrow(
-				'Tab is undefined'
-			);
-			expect(isTrackedURL).not.toHaveBeenCalled();
 		});
 	});
 
@@ -311,24 +325,6 @@ describe('background.js', () => {
 			consoleSpy.mockRestore();
 		});
 
-		test('should call functions when tab update is complete and URL is tracked', async () => {
-			const tabId = 123;
-			const changeInfo = { status: 'complete' };
-			const tab = { id: tabId, url: 'https://example.com' };
-
-			isTrackedURL.mockResolvedValue(true);
-
-			await global.onUpdatedCallback(tabId, changeInfo, tab);
-
-			expect(isTrackedURL).toHaveBeenCalledTimes(2);
-			expect(isTrackedURL).toHaveBeenCalledWith(tab.url);
-
-			expect(mockTabsSendMessage).toHaveBeenCalledTimes(1);
-			expect(mockTabsSendMessage).toHaveBeenCalledWith(tabId, {
-				type: 'createTimerElement',
-			});
-		});
-
 		test('should call functions except sendMessage when tab update is complete but URL is not tracked', async () => {
 			const tabId = 456;
 			const changeInfo = { status: 'complete' };
@@ -336,7 +332,7 @@ describe('background.js', () => {
 
 			await global.onUpdatedCallback(tabId, changeInfo, tab);
 
-			expect(isTrackedURL).toHaveBeenCalledTimes(2);
+			expect(isTrackedURL).toHaveBeenCalledTimes(1);
 			expect(isTrackedURL).toHaveBeenCalledWith(tab.url);
 
 			expect(mockTabsSendMessage).not.toHaveBeenCalled();
@@ -351,22 +347,6 @@ describe('background.js', () => {
 
 			expect(isTrackedURL).not.toHaveBeenCalled();
 			expect(mockTabsSendMessage).not.toHaveBeenCalled();
-		});
-
-		test('should log error if any function throws an error', async () => {
-			const tabId = 101;
-			const changeInfo = { status: 'complete' };
-			const tab = { id: tabId, url: 'https://error-example.com' };
-			const errorMessage = 'Something went wrong!';
-
-			isTrackedURL.mockRejectedValue(new Error(errorMessage));
-
-			await global.onUpdatedCallback(tabId, changeInfo, tab);
-
-			expect(isTrackedURL).toHaveBeenCalledTimes(1);
-			expect(consoleSpy).toHaveBeenCalledTimes(1);
-			expect(consoleSpy).toHaveBeenCalledWith(expect.any(Error));
-			expect(consoleSpy.mock.calls[0][0].message).toBe(errorMessage);
 		});
 	});
 

@@ -64,17 +64,22 @@ chrome.runtime.onStartup.addListener(() => {
 chrome.tabs.onUpdated.addListener(async function (tabId, changeInfo, tab) {
 	if (changeInfo.status === 'complete' && tab && tab.url) {
 		try {
-			// Create timer element in content.js
-			if (await isTrackedURL(tab.url)) {
-				chrome.tabs.sendMessage(tabId, {
-					type: 'createTimerElement',
-				});
-			}
-
 			updateTimerState(tab);
 		} catch (error) {
 			console.log(error);
 		}
+	}
+});
+
+// Start/Stop timer when a tracked tab is active
+chrome.tabs.onActivated.addListener(async (activeInfo) => {
+	try {
+		const tab = await getCurrentTab(activeInfo.tabId);
+		if (tab) {
+			updateTimerState(tab);
+		}
+	} catch (error) {
+		console.log(error);
 	}
 });
 
@@ -91,19 +96,6 @@ chrome.windows.onFocusChanged.addListener(async function (windowId) {
 		// IN A CHROME WINDOW
 		const tab = await getCurrentTab();
 		updateTimerState(tab);
-	}
-});
-
-// Start/Stop timer when a tracked tab is active
-chrome.tabs.onActivated.addListener(async (activeInfo) => {
-	try {
-		// Use the utility function you are already mocking in tests
-		const tab = await getCurrentTab(activeInfo.tabId);
-		if (tab && tab.url) {
-			updateTimerState(tab);
-		}
-	} catch (error) {
-		console.log(error);
 	}
 });
 
@@ -177,10 +169,15 @@ export async function resetTimerDaily() {
 // handles starting/stopping the timer based on whether the tab is a tracked tab.
 export async function updateTimerState(tab) {
 	if (!tab || !tab.url) {
-		throw new Error('Tab is undefined');
+		return;
 	}
 
 	if (await isTrackedURL(tab.url)) {
+		// Create timer element in current tab
+		chrome.tabs.sendMessage(tab.id, {
+			type: 'createTimerElement',
+		});
+
 		// Continue timer when user return to a yt tab
 		try {
 			const trackedWeb = getHostname(tab.url);
