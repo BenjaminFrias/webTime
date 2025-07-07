@@ -1,6 +1,7 @@
 export class TimerUI {
 	constructor() {
 		this.timerElem = null;
+		this.blockElem = null;
 	}
 
 	createTimerElem() {
@@ -25,5 +26,18 @@ export class TimerUI {
 		} else {
 			this.timerElem.textContent = `${formmatedMin}:${formmatedSec}`;
 		}
+	}
+
+	createBlockElem() {
+		const blockContainer = document.createElement('div');
+		blockContainer.classList.add('block-container');
+
+		const limitText = document.createElement('p');
+		limitText.textContent = 'Limit reached!';
+
+		blockContainer.appendChild(limitText);
+		document.body.appendChild(blockContainer);
+
+		this.blockElem = true;
 	}
 }

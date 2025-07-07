@@ -33,13 +33,15 @@ export class Timer {
 	}
 
 	async _tick({ trackedURL, hours, minutes, seconds }) {
+		// Send data to timer
 		const timerData = { hours: hours, minutes: minutes, seconds: seconds };
 
-		await sendData('timer', timerData);
+		await sendData('timerData', 'timer', timerData);
 
 		const trackedData = await getData(TRACKED_DATA_KEY);
-		const safeTrackedData = trackedData || {};
 
+		// Set new timer data
+		const safeTrackedData = trackedData || {};
 		const newTrackedData = {
 			...safeTrackedData,
 			[trackedURL]: {
@@ -48,5 +50,16 @@ export class Timer {
 			},
 		};
 		await setData(TRACKED_DATA_KEY, newTrackedData);
+
+		// Check for timer limit and send alert to content
+		const hoursLimit = trackedData[trackedURL]['limit']['hours'];
+		const minutesLimit = trackedData[trackedURL]['limit']['minutes'];
+		if (hours >= Number(hoursLimit) && minutes >= Number(minutesLimit)) {
+			sendData('timeout', 'limit', {
+				hoursLimit: hoursLimit,
+				minutesLimit: minutesLimit,
+			});
+			this.stopTimer();
+		}
 	}
 }

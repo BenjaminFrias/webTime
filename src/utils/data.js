@@ -26,7 +26,7 @@ export async function setData(key, data) {
 	});
 }
 
-export async function sendData(dataType, data) {
+export async function sendData(action, propName, data) {
 	const tab = await getCurrentTab();
 	if (!tab) {
 		console.warn('Could not get current tab. Message not sent.');
@@ -35,8 +35,8 @@ export async function sendData(dataType, data) {
 	const tabTarget = tab['id'];
 
 	chrome.tabs.sendMessage(tabTarget, {
-		type: 'background',
-		[dataType]: data,
+		type: action,
+		[propName]: data,
 	});
 }
 
