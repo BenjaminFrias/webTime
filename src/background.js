@@ -122,6 +122,51 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 					message: error.message,
 				});
 			}
+		} else if (request.action === 'addTimeLimit') {
+			try {
+				const { hoursLimit, minsLimit } = request.timeLimit;
+
+				if (
+					hoursLimit &&
+					minsLimit &&
+					isNumeric(hoursLimit) &&
+					isNumeric(minsLimit) &&
+					Number(hoursLimit) > -1 &&
+					Number(minsLimit) > -1
+				) {
+					if (Number(hoursLimit) == 0 && Number(minsLimit) < 1) {
+						throw new Error(
+							'Error: You must have at least 1 minute of time limit'
+						);
+					}
+
+					const currentTab = await getCurrentTab();
+					const url = currentTab.url;
+
+					const timeLimit = {
+						hours: Number(hoursLimit),
+						minutes: Number(minsLimit),
+					};
+
+					setTimerLimit(url, timeLimit);
+
+					sendResponse({
+						status: 'success',
+						message: 'Time limit added',
+					});
+				} else {
+					sendResponse({
+						status: 'error',
+						message: 'Time limit format is not valid.',
+					});
+				}
+			} catch (error) {
+				console.error('Background: Failed to add time limit. ERROR: ', error);
+				sendResponse({
+					status: 'error',
+					message: error.message,
+				});
+			}
 		}
 	})();
 	return true;
@@ -203,4 +248,21 @@ export async function updateTimerState(tab) {
 		// Stop timer when user leaves tracked tab
 		currentTimer.stopTimer();
 	}
+}
+
+export async function setTimerLimit(trackedURL, timeLimit) {
+	const trackedData = await getData(TRACKED_DATA_KEY);
+
+	const newTrackedData = {
+		...trackedData,
+		[trackedURL]: {
+			...trackedData[trackedURL],
+			limit: timeLimit,
+		},
+	};
+	await setData(TRACKED_DATA_KEY, newTrackedData);
+}
+
+function isNumeric(str) {
+	return !isNaN(parseFloat(str)) && isFinite(str);
 }

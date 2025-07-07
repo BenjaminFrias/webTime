@@ -9,11 +9,35 @@
 	</head>
 	<body>
 		<div class="container">
-			<h1>Add new web to track</h1>
-			<p id="addResult"></p>
-			<div>
+			<h3>Add new web to track</h3>
+			<p id="result"></p>
+			<div style="display: flex; gap: 15px">
 				<p>Add current website</p>
 				<button id="newWebButton">+</button>
+			</div>
+
+			<div>
+				<h3>Add time limit</h3>
+				<form id="limitForm">
+					<input
+						type="number"
+						name="hoursLimit"
+						id="hoursLimit"
+						min="0"
+						max="24"
+						placeholder="Hours limit"
+					/>
+					<span>:</span>
+					<input
+						type="number"
+						name="minsLimit"
+						id="minsLimit"
+						min="1"
+						max="59"
+						placeholder="Minutes limit"
+					/>
+					<button type="submit">Set limit</button>
+				</form>
 			</div>
 		</div>
 	</body>

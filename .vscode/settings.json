@@ -1,3 +1,7 @@
 {
-    "print.general.filepathHeadingForIndividuallyPrintedDocuments": false
+    "print.general.filepathHeadingForIndividuallyPrintedDocuments": false,
+    "files.associations": {
+        "stdbool.h": "c",
+        "string.h": "c"
+    }
 }

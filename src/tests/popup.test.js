@@ -22,6 +22,17 @@ describe('initPopup', () => {
 		document.body.innerHTML = `
             <button id="newWebButton">Add New Website</button>
             <div id="addResult"></div>
+			<form id="limit-form">
+					<input
+						type="number"
+						name="hourLimit"
+						id="hourLimit"
+						min="0"
+						max="24"
+					/>
+					<input type="number" name="minLimit" id="minLimit" min="1" max="59" />
+					<button type="submit">Set limit</button>
+				</form>
         `;
 
 		newWebButton = document.querySelector('#newWebButton');
