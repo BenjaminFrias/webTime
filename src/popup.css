@@ -1,4 +1,135 @@
 body {
-	width: 300px;
-	height: 100px;
+	margin: 0;
+	width: 200px;
+	height: auto;
+}
+
+.container {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	padding: 10px;
+	background: rgb(37, 37, 37);
+	color: white;
+}
+
+.pop-title {
+	font-size: 1.2rem;
+	font-family: 'Rubik', Arial, Helvetica, sans-serif;
+	font-weight: 500;
+	margin: 0;
+}
+
+.sections {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	width: 100%;
+}
+
+.section {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	padding: 15px 0px;
+	gap: 10px;
+	width: 100%;
+	border-radius: 15px;
+	border: 1px solid rgb(53, 53, 53);
+}
+
+.section:nth-child(1) {
+	box-shadow: rgba(160, 160, 160, 0.25) 0px 0px 12px;
+}
+
+.section:nth-child(2) {
+	box-shadow: rgba(160, 160, 160, 0.25) 0px 0px 12px;
+}
+
+.section > h2 {
+	font-family: 'Rubik', Arial, Helvetica, sans-serif;
+	font-weight: 500;
+	font-size: 0.9rem;
+	padding: 0;
+	margin: 0;
+}
+
+.section-btn {
+	width: 120px;
+	height: 25px;
+	background: rgba(160, 160, 160, 0.25);
+	border: 0px;
+	border-radius: 5px;
+	color: white;
+	font-weight: 600;
+	outline: 0px;
+	box-shadow: rgba(160, 160, 160, 0.15) 0px 0px 12px;
+	scale: 1;
+	text-transform: uppercase;
+	transition: all 150ms ease;
+}
+
+.section-btn:hover {
+	scale: 1.05;
+	transition: all 150ms ease;
+}
+
+/* RESULT */
+
+p#result {
+	font-family: 'Rubik', Arial, Helvetica, sans-serif;
+	font-weight: 500;
+	font-size: 0.9rem;
+	color: rgb(201, 201, 201);
+}
+
+/* TIME LIMIT - SECTION */
+
+.add-limit-container {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+}
+
+#limitForm {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	justify-content: center;
+	align-items: center;
+}
+
+.limit-fields {
+	display: flex;
+	gap: 8px;
+}
+
+.limit-fields > div {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	gap: 5px;
+}
+
+.limit-field {
+	background: rgba(160, 160, 160, 0.25);
+	border: 0px;
+	border-radius: 3px;
+	padding: 5px 8px;
+	width: 30px;
+	color: white;
+	font-weight: 600;
+	font-size: 0.8rem;
+	outline: 0px;
+	box-shadow: rgba(160, 160, 160, 0.15) 0px 0px 12px;
+}
+
+.limit-fields > div > label {
+	font-family: 'Rubik', Arial, Helvetica, sans-serif;
+	font-weight: 400;
+	font-size: 0.8rem;
 }
