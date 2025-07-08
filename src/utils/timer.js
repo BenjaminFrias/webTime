@@ -4,6 +4,7 @@ import { getData, sendData, setData } from './data.js';
 export class Timer {
 	constructor() {
 		this.timer = null;
+		this.blocked = false;
 	}
 
 	startTimer({ hours, minutes, seconds }, trackedURL) {
@@ -36,8 +37,6 @@ export class Timer {
 		// Send data to timer
 		const timerData = { hours: hours, minutes: minutes, seconds: seconds };
 
-		await sendData('timerData', 'timer', timerData);
-
 		const trackedData = await getData(TRACKED_DATA_KEY);
 
 		// Check for timer limit and send alert to content
@@ -56,9 +55,27 @@ export class Timer {
 					minutesLimit: minutesLimit,
 				});
 				this.stopTimer();
+
+				if (!this.blocked) {
+					await sendData('timerData', 'timer', timerData);
+
+					// Add the last second in chrome
+					const safeTrackedData = trackedData || {};
+					const newTrackedData = {
+						...safeTrackedData,
+						[trackedURL]: {
+							...(safeTrackedData[trackedURL] || {}),
+							timer: timerData,
+						},
+					};
+					await setData(TRACKED_DATA_KEY, newTrackedData);
+				}
+				this.blocked = true;
 				return;
 			}
 		}
+
+		await sendData('timerData', 'timer', timerData);
 
 		// Set new timer data
 		const safeTrackedData = trackedData || {};

@@ -148,7 +148,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 						minutes: Number(minsLimit),
 					};
 
-					setTimerLimit(url, timeLimit);
+					setTimerLimit(getHostname(url), timeLimit);
 
 					sendResponse({
 						status: 'success',
