@@ -59,9 +59,6 @@ document.addEventListener('DOMContentLoaded', () => {
 					}, 1000);
 				} else {
 					resultMessage.textContent = response.message;
-					setTimeout(() => {
-						resultMessage.textContent = '';
-					}, 2000);
 				}
 			}
 		);

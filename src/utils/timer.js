@@ -40,6 +40,26 @@ export class Timer {
 
 		const trackedData = await getData(TRACKED_DATA_KEY);
 
+		// Check for timer limit and send alert to content
+		const hoursLimit = trackedData[trackedURL]?.limit?.hours;
+		const minutesLimit = trackedData[trackedURL]?.limit?.minutes;
+
+		// Check if hours and minutes exist
+		if (
+			(hoursLimit === 0 || hoursLimit) &&
+			(minutesLimit === 0 || minutesLimit)
+		) {
+			// Check if current time is equal to limit
+			if (hours >= hoursLimit && minutes >= minutesLimit) {
+				sendData('timeout', 'limit', {
+					hoursLimit: hoursLimit,
+					minutesLimit: minutesLimit,
+				});
+				this.stopTimer();
+				return;
+			}
+		}
+
 		// Set new timer data
 		const safeTrackedData = trackedData || {};
 		const newTrackedData = {
@@ -50,16 +70,5 @@ export class Timer {
 			},
 		};
 		await setData(TRACKED_DATA_KEY, newTrackedData);
-
-		// Check for timer limit and send alert to content
-		const hoursLimit = trackedData[trackedURL]['limit']['hours'];
-		const minutesLimit = trackedData[trackedURL]['limit']['minutes'];
-		if (hours >= Number(hoursLimit) && minutes >= Number(minutesLimit)) {
-			sendData('timeout', 'limit', {
-				hoursLimit: hoursLimit,
-				minutesLimit: minutesLimit,
-			});
-			this.stopTimer();
-		}
 	}
 }
