@@ -4,6 +4,12 @@ document.addEventListener('DOMContentLoaded', () => {
 	const setLimitForm = document.querySelector('#limitForm');
 	const hoursLimit = document.querySelector('#hoursLimit');
 	const minsLimit = document.querySelector('#minsLimit');
+	const removeLimitBtn = document.querySelector('#remove-limit-btn');
+	const addNewWebSection = document.querySelector('.section.new-web-container');
+	const removeSection = document.querySelector('.section.remove-limit');
+	const addLimitSection = document.querySelector(
+		'.section.add-limit-container'
+	);
 
 	newWebBtn.addEventListener('click', () => {
 		chrome.runtime.sendMessage(
@@ -19,7 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 					setTimeout(() => {
 						window.close();
-					}, 1000);
+					}, 2000);
 				} else {
 					resultMessage.textContent = response.message;
 					setTimeout(() => {
@@ -56,9 +62,34 @@ document.addEventListener('DOMContentLoaded', () => {
 
 					setTimeout(() => {
 						window.close();
-					}, 1000);
+					}, 2000);
 				} else {
 					resultMessage.textContent = response.message;
+				}
+			}
+		);
+	});
+
+	removeLimitBtn.addEventListener('click', () => {
+		chrome.runtime.sendMessage(
+			{
+				action: 'removeLimit',
+			},
+			function (response) {
+				if (response && response.status === 'success') {
+					resultMessage.textContent = response.message;
+					setTimeout(() => {
+						resultMessage.textContent = '';
+					}, 2000);
+
+					setTimeout(() => {
+						window.close();
+					}, 2000);
+				} else {
+					resultMessage.textContent = response.message;
+					setTimeout(() => {
+						resultMessage.textContent = '';
+					}, 2000);
 				}
 			}
 		);

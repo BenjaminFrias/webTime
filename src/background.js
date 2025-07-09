@@ -103,10 +103,9 @@ chrome.windows.onFocusChanged.addListener(async function (windowId) {
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 	(async () => {
 		if (request.action === 'addNewWebsite') {
-			const currentTab = await getCurrentTab();
-			const newUrl = currentTab.url;
-
 			try {
+				const currentTab = await getCurrentTab();
+				const newUrl = currentTab.url;
 				await addWebToTrack(getHostname(newUrl));
 				sendResponse({
 					status: 'success',
@@ -162,6 +161,29 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 				}
 			} catch (error) {
 				console.error('Background: Failed to add time limit. ERROR: ', error);
+				sendResponse({
+					status: 'error',
+					message: error.message,
+				});
+			}
+		} else if (request.action === 'removeLimit') {
+			try {
+				const currentTab = await getCurrentTab();
+				const url = currentTab.url;
+				const urlToRemoveLimit = getHostname(url);
+
+				await removeTimeLimit(urlToRemoveLimit);
+				sendResponse({
+					status: 'success',
+					message: 'Time limit removed',
+				});
+
+				// todo: remove block page element
+			} catch (error) {
+				console.error(
+					'Background: Failed to add new website to track. ERROR: ',
+					error
+				);
 				sendResponse({
 					status: 'error',
 					message: error.message,
@@ -261,6 +283,27 @@ export async function setTimerLimit(trackedURL, timeLimit) {
 		},
 	};
 	await setData(TRACKED_DATA_KEY, newTrackedData);
+}
+
+export async function removeTimeLimit(trackedURL) {
+	try {
+		const trackedData = await getData(TRACKED_DATA_KEY);
+		const currentTrackedURLData = trackedData[trackedURL] || {};
+
+		if (!currentTrackedURLData['limit']) {
+			throw new Error('Limit does not exist.');
+		}
+
+		const { limit, ...restOfTrackedURLData } = currentTrackedURLData;
+
+		const newTrackedData = {
+			...trackedData,
+			[trackedURL]: restOfTrackedURLData,
+		};
+		await setData(TRACKED_DATA_KEY, newTrackedData);
+	} catch (error) {
+		console.log('Error while removing limit: ', error);
+	}
 }
 
 function isNumeric(str) {
