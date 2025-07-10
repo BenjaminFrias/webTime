@@ -107,6 +107,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 				const currentTab = await getCurrentTab();
 				const newUrl = currentTab.url;
 				await addWebToTrack(getHostname(newUrl));
+
+				updateTimerState(currentTab);
 				sendResponse({
 					status: 'success',
 					message: 'Website added',
