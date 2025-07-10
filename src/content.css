@@ -35,6 +35,10 @@ body {
 	cursor: grab;
 }
 
+.draggable.dragging-active {
+	cursor: grabbing;
+}
+
 .timer-container > p {
 	color: #a3a3a3;
 	font-family: 'Rubik', sans-serif;

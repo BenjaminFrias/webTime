@@ -6,6 +6,7 @@ import {
 } from './utils/data.js';
 import {
 	DAILY_RESET_ALARM_NAME,
+	POSITION_KEY,
 	STORAGE_LAST_DAY_KEY,
 	TRACKED_DATA_KEY,
 } from './settings.js';
@@ -182,6 +183,30 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 			} catch (error) {
 				console.error(
 					'Background: Failed to add new website to track. ERROR: ',
+					error
+				);
+				sendResponse({
+					status: 'error',
+					message: error.message,
+				});
+			}
+		} else if (request.action === 'saveTimerPosition') {
+			try {
+				if (!request.position) return;
+				await setData(POSITION_KEY, request.position);
+			} catch (error) {
+				console.log('error setting timer position: ', error);
+			}
+		} else if (request.action === 'getTimerPosition') {
+			try {
+				const positionData = await getData(POSITION_KEY);
+				sendResponse({
+					status: 'success',
+					positionData: positionData,
+				});
+			} catch (error) {
+				console.error(
+					'Background: Failed to get timer position. ERROR: ',
 					error
 				);
 				sendResponse({
