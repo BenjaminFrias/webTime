@@ -177,8 +177,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 					status: 'success',
 					message: 'Time limit removed',
 				});
-
-				// todo: remove block page element
 			} catch (error) {
 				console.error(
 					'Background: Failed to add new website to track. ERROR: ',
