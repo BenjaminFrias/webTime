@@ -38,6 +38,9 @@ export class TimerUI {
 		blockContainer.appendChild(limitText);
 		document.body.appendChild(blockContainer);
 
-		this.blockElem = true;
+		this.blockElem = blockContainer;
+
+		// Block scroll
+		document.body.classList.add('no-scroll');
 	}
 }
