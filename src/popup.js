@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	const removeLimitBtn = document.querySelector('#remove-limit-btn');
 	const addNewWebSection = document.querySelector('.section.new-web-container');
 	const removeSection = document.querySelector('.section.remove-limit');
+	const stopTrackingBtn = document.querySelector('#stopTrackingBtn');
 	const addLimitSection = document.querySelector(
 		'.section.add-limit-container'
 	);
@@ -26,6 +27,35 @@ document.addEventListener('DOMContentLoaded', () => {
 					setTimeout(() => {
 						window.close();
 					}, 2000);
+
+					addNewWebSection.classList.add('hidden');
+				} else {
+					resultMessage.textContent = response.message;
+					setTimeout(() => {
+						resultMessage.textContent = '';
+					}, 2000);
+				}
+			}
+		);
+	});
+
+	stopTrackingBtn.addEventListener('click', () => {
+		chrome.runtime.sendMessage(
+			{
+				action: 'stopTracking',
+			},
+			function (response) {
+				if (response && response.status === 'success') {
+					resultMessage.textContent = response.message;
+					setTimeout(() => {
+						resultMessage.textContent = '';
+					}, 2000);
+
+					setTimeout(() => {
+						window.close();
+					}, 2000);
+
+					// TODO: add track new website section
 				} else {
 					resultMessage.textContent = response.message;
 					setTimeout(() => {
@@ -63,6 +93,8 @@ document.addEventListener('DOMContentLoaded', () => {
 					setTimeout(() => {
 						window.close();
 					}, 2000);
+
+					// TODO: Hide time limit form, show remove limit button and current limit
 				} else {
 					resultMessage.textContent = response.message;
 				}

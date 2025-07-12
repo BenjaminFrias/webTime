@@ -4,14 +4,20 @@ const timerUI = new TimerUI();
 
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 	if (request.type === 'createTimerElement') {
-		if (!timerUI.timerElem) {
+		if (!timerUI.timerContainer) {
 			timerUI.createTimerElem();
+		}
+	}
+
+	if (request.type === 'removeTimerElement') {
+		if (timerUI.timerContainer) {
+			timerUI.removeTimerElem();
 		}
 	}
 
 	if (request.type === 'timerData') {
 		const timerData = request.timer;
-		if (timerUI.timerElem) {
+		if (timerUI.timerContainer) {
 			timerUI.updateTimerElem(timerData);
 		}
 	}

@@ -1,6 +1,7 @@
 export class TimerUI {
 	constructor() {
-		this.timerElem = null;
+		this.timeText = null;
+		this.timerContainer = null;
 		this.blockElem = null;
 	}
 
@@ -32,7 +33,15 @@ export class TimerUI {
 
 		this.addDraggableFunctionality(timerContainer);
 
-		this.timerElem = timer;
+		this.timeText = timer;
+		this.timerContainer = timerContainer;
+	}
+
+	removeTimerElem() {
+		this.timerContainer.remove();
+		this.timeText.remove();
+		this.timerContainer = null;
+		this.timeText = null;
 	}
 
 	updateTimerElem({ hours, minutes, seconds }) {
@@ -41,9 +50,9 @@ export class TimerUI {
 		let formmatedHours = hours <= 9 ? `0${hours}` : hours;
 
 		if (hours > 0) {
-			this.timerElem.textContent = `${formmatedHours}:${formmatedMin}:${formmatedSec}`;
+			this.timeText.textContent = `${formmatedHours}:${formmatedMin}:${formmatedSec}`;
 		} else {
-			this.timerElem.textContent = `${formmatedMin}:${formmatedSec}`;
+			this.timeText.textContent = `${formmatedMin}:${formmatedSec}`;
 		}
 	}
 

@@ -124,6 +124,32 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 					message: error.message,
 				});
 			}
+		} else if (request.action === 'stopTracking') {
+			try {
+				const currentTab = await getCurrentTab();
+				const url = currentTab.url;
+				const urlToRemoveLimit = getHostname(url);
+
+				await removeProp(urlToRemoveLimit, 'timer');
+
+				sendResponse({
+					status: 'success',
+					message: 'tracking stopped',
+				});
+
+				chrome.tabs.sendMessage(currentTab.id, {
+					type: 'removeTimerElement',
+				});
+			} catch (error) {
+				console.error(
+					'Background: Failed to stop tracking website. ERROR: ',
+					error
+				);
+				sendResponse({
+					status: 'error',
+					message: error.message,
+				});
+			}
 		} else if (request.action === 'addTimeLimit') {
 			try {
 				const { hoursLimit, minsLimit } = request.timeLimit;
@@ -175,7 +201,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 				const url = currentTab.url;
 				const urlToRemoveLimit = getHostname(url);
 
-				await removeTimeLimit(urlToRemoveLimit);
+				await removeProp(urlToRemoveLimit, 'limit');
 				sendResponse({
 					status: 'success',
 					message: 'Time limit removed',
@@ -310,22 +336,35 @@ export async function setTimerLimit(trackedURL, timeLimit) {
 	await setData(TRACKED_DATA_KEY, newTrackedData);
 }
 
-export async function removeTimeLimit(trackedURL) {
+export async function removeProp(trackedURL, propToDelete) {
 	try {
 		const trackedData = await getData(TRACKED_DATA_KEY);
-		const currentTrackedURLData = trackedData[trackedURL] || {};
 
-		if (!currentTrackedURLData['limit']) {
-			throw new Error('Limit does not exist.');
+		if (!(await isTrackedURL(trackedURL))) {
+			throw new Error('Url does not exist');
 		}
 
-		const { limit, ...restOfTrackedURLData } = currentTrackedURLData;
+		const currentTrackedURLData = trackedData[trackedURL] || {};
 
-		const newTrackedData = {
-			...trackedData,
-			[trackedURL]: restOfTrackedURLData,
-		};
-		await setData(TRACKED_DATA_KEY, newTrackedData);
+		if (propToDelete === 'limit' && !currentTrackedURLData['limit']) {
+			throw new Error('Limit property does not exist on the tracked URL data.');
+		}
+
+		if (propToDelete === 'timer' && !currentTrackedURLData['timer']) {
+			throw new Error('Timer property does not exist on the tracked URL data.');
+		}
+
+		if (propToDelete === 'limit') {
+			delete currentTrackedURLData[propToDelete];
+			const newTrackedData = {
+				...trackedData,
+				[trackedURL]: currentTrackedURLData,
+			};
+			await setData(TRACKED_DATA_KEY, newTrackedData);
+		} else if (propToDelete === 'timer') {
+			delete trackedData[trackedURL];
+			await setData(TRACKED_DATA_KEY, trackedData);
+		}
 	} catch (error) {
 		console.log('Error while removing limit: ', error);
 	}
