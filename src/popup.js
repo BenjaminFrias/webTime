@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	const stopTrackingSection = document.querySelector('.section.stop-tracking');
 	const removeLimitSection = document.querySelector('.section.remove-limit');
 	const addLimitSection = document.querySelector('.section.add-limit');
+	const limitTimeText = document.querySelector('#limit-text');
 
 	togglePopUpActions();
 
@@ -138,6 +139,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			function (response) {
 				if (response && response.status === 'success') {
 					// toggle data
+
 					if (!response.data.isTracked) {
 						// Is not tracked
 						addNewWebSection.classList.remove('hidden');
@@ -156,6 +158,17 @@ document.addEventListener('DOMContentLoaded', () => {
 						stopTrackingSection.classList.remove('hidden');
 						addNewWebSection.classList.add('hidden');
 						addLimitSection.classList.add('hidden');
+
+						// Show timer in remove limit
+
+						const { hours, minutes } = response.data.isLimited;
+						let formmatedMin = minutes <= 9 ? `0${minutes}` : minutes;
+
+						if (hours > 0) {
+							limitTimeText.textContent += `${hours}h ${formmatedMin}min`;
+						} else {
+							limitTimeText.textContent += `${formmatedMin}min`;
+						}
 					}
 				} else {
 					resultMessage.textContent = response.message;
