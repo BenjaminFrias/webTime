@@ -50,10 +50,11 @@ body {
 }
 
 .block-container {
+	position: fixed;
+	top: 0;
 	width: 100vw;
 	height: 100vh;
 	background: #0a0a0afa;
-	position: absolute;
 	display: flex;
 	justify-content: center;
 	align-content: center;

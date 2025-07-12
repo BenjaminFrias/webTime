@@ -60,7 +60,7 @@ export class TimerUI {
 		this.blockElem = blockContainer;
 
 		// Block scroll
-		document.body.classList.add('no-scroll');
+		document.documentElement.classList.add('no-scroll');
 	}
 
 	addDraggableFunctionality(elemToDrag) {
