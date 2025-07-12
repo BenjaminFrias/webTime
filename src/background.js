@@ -177,6 +177,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 					};
 
 					setTimerLimit(getHostname(url), timeLimit);
+					updateTimerState();
 
 					sendResponse({
 						status: 'success',
@@ -235,6 +236,50 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 					'Background: Failed to get timer position. ERROR: ',
 					error
 				);
+				sendResponse({
+					status: 'error',
+					message: error.message,
+				});
+			}
+		} else if (request.action === 'getCurrentTabInfo') {
+			// GET DATA - URL, TIMER, LIMIT
+			try {
+				const trackedData = await getData(TRACKED_DATA_KEY);
+
+				if (!trackedData) {
+					throw new Error('There is not data available');
+				}
+
+				const currentTab = await getCurrentTab();
+				const url = getHostname(currentTab.url);
+
+				const data = {
+					isTracked: null,
+					isLimited: null,
+				};
+
+				if (!trackedData[url]) {
+					sendResponse({
+						status: 'success',
+						data: data,
+					});
+					return;
+				}
+
+				if (trackedData[url]['timer']) {
+					data.isTracked = trackedData[url]['timer'];
+				}
+
+				if (trackedData[url]['limit']) {
+					data.isLimited = trackedData[url]['limit'];
+				}
+
+				sendResponse({
+					status: 'success',
+					data: data,
+				});
+			} catch (error) {
+				console.error('Background: Failed to get data. ERROR: ', error);
 				sendResponse({
 					status: 'error',
 					message: error.message,
@@ -364,6 +409,9 @@ export async function removeProp(trackedURL, propToDelete) {
 		} else if (propToDelete === 'timer') {
 			delete trackedData[trackedURL];
 			await setData(TRACKED_DATA_KEY, trackedData);
+
+			const currentTab = await getCurrentTab();
+			updateTimerState(currentTab);
 		}
 	} catch (error) {
 		console.log('Error while removing limit: ', error);
