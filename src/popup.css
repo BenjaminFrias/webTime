@@ -22,14 +22,20 @@ body {
 }
 
 .top-bar > img {
-	width: 18px;
+	width: 24px;
+	border: 1px solid rgb(71, 71, 71);
+	box-shadow: rgba(182, 182, 182, 0.25) 0px 0px 12px;
+	border-radius: 100%;
 }
 
 .pop-title {
-	font-size: 1.2rem;
-	font-family: 'Rubik', Arial, Helvetica, sans-serif;
-	font-weight: 500;
+	font-size: 1.1rem;
+	font-family: 'Epilogue', Arial, Helvetica, sans-serif;
+	font-weight: 800;
+	font-style: italic;
 	margin: 0;
+	margin-top: 4px;
+	cursor: default;
 }
 
 .sections {
