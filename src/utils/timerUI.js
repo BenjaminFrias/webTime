@@ -59,6 +59,7 @@ export class TimerUI {
 	createBlockElem() {
 		const blockContainer = document.createElement('div');
 		blockContainer.classList.add('block-container');
+		blockContainer.classList.add('show-full-page');
 
 		const limitText = document.createElement('p');
 		limitText.textContent = 'Limit reached!';
@@ -70,6 +71,74 @@ export class TimerUI {
 
 		// Block scroll
 		document.documentElement.classList.add('no-scroll');
+	}
+
+	createConfirmRemovalPopup(removalType) {
+		const confirmContainer = document.createElement('div');
+		confirmContainer.classList.add('confirm-container');
+		confirmContainer.classList.add('show-full-page');
+
+		const btnsContainer = document.createElement('div');
+		btnsContainer.classList.add('confirm-btns');
+
+		const confirmText = document.createElement('p');
+		confirmText.textContent = `Do you still want to remove the ${removalType}?`;
+
+		const confirmBtn = document.createElement('button');
+		confirmBtn.textContent = 'Confirm';
+
+		const cancelBtn = document.createElement('button');
+		cancelBtn.textContent = 'Cancel';
+
+		confirmBtn.addEventListener('click', () => {
+			hidePopUp();
+			chrome.runtime.sendMessage(
+				{
+					action: 'confirmedRemoval',
+					removalType: removalType,
+				},
+				function (response) {
+					if (response.status === 'success') {
+						if (this.blockElem) {
+							this.blockElem.remove();
+							this.blockElem = null;
+						}
+
+						if (response.removalType === 'timer') {
+							const timerContainer = document.querySelector('.timer-container');
+							timerContainer.remove();
+							this.timerContainer = null;
+						}
+					} else {
+						alert(response.message);
+						console.log(response.message);
+					}
+				}
+			);
+		});
+
+		cancelBtn.addEventListener('click', () => {
+			hidePopUp();
+		});
+
+		btnsContainer.appendChild(cancelBtn);
+		btnsContainer.appendChild(confirmBtn);
+
+		confirmContainer.appendChild(confirmText);
+		confirmContainer.appendChild(btnsContainer);
+
+		document.body.appendChild(confirmContainer);
+
+		this.confirmPopupElem = confirmContainer;
+
+		// Block scroll
+		document.documentElement.classList.add('no-scroll');
+
+		const hidePopUp = () => {
+			document.documentElement.classList.remove('no-scroll');
+			this.confirmPopupElem.remove();
+			this.confirmPopupElem = null;
+		};
 	}
 
 	addDraggableFunctionality(elemToDrag) {

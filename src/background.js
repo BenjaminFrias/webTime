@@ -9,11 +9,13 @@ import {
 	POSITION_KEY,
 	STORAGE_LAST_DAY_KEY,
 	TRACKED_DATA_KEY,
+	PENDING_REMOVALS_KEY,
 } from './settings.js';
 import { Timer } from './utils/timer.js';
 import { isTrackedURL, getHostname, getCurrentTab } from './utils/tab.js';
 
-let currentTimer = new Timer();
+const REMOVAL_COOL_DOWN_MS = 0.02 * 60 * 1000;
+const currentTimer = new Timer();
 
 const defaultTimer = { hours: 0, minutes: 0, seconds: 0 };
 
@@ -47,6 +49,33 @@ async function setUpDailyResetAlarm() {
 chrome.alarms.onAlarm.addListener(async (alarm) => {
 	if (alarm.name === DAILY_RESET_ALARM_NAME) {
 		resetTimerDaily();
+	} else if (alarm.name.startsWith('confirm_removal')) {
+		const alarmData = alarm.name.replace('confirm_removal_', '');
+		const [removalType, url] = alarmData.split('_');
+
+		const hostname = getHostname(url);
+		const website = hostname.split('://')[1].replace('/', '');
+
+		chrome.notifications.create({
+			type: 'basic',
+			iconUrl: 'assets/icons/icon16.png',
+			title: 'Confirm Website Removal',
+			message: `Do you still want to remove ${removalType} for ${website}? Return to the tab and click confirm.`,
+			isClickable: true,
+		});
+
+		// TODO: use tab id from alarm name, not from current tab
+		const currentTab = await getCurrentTab();
+		chrome.tabs.sendMessage(tabId, {
+			type: 'confirmRemovalPopup',
+			removalType: removalType,
+		});
+
+		const pendingData = await getData(PENDING_REMOVALS_KEY);
+		if (pendingData[url]) {
+			delete pendingData[url];
+			await setData(PENDING_REMOVALS_KEY, pendingData);
+		}
 	}
 });
 
@@ -196,16 +225,63 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 					message: error.message,
 				});
 			}
-		} else if (request.action === 'removeLimit') {
+		} else if (request.action === 'requestRemove') {
 			try {
 				const currentTab = await getCurrentTab();
 				const url = currentTab.url;
 				const urlToRemoveLimit = getHostname(url);
 
-				await removeProp(urlToRemoveLimit, 'limit');
+				const pendingRemovals = await getData(PENDING_REMOVALS_KEY);
+
+				if (!pendingRemovals) {
+					throw new Error('Error retrieving pending removals.');
+				}
+
+				if (pendingRemovals[urlToRemoveLimit]) {
+					sendResponse({
+						status: 'error',
+						message: 'Removal already pending',
+					});
+				}
+
+				const trackedData = await getData(TRACKED_DATA_KEY);
+
+				if (!trackedData[urlToRemoveLimit]) {
+					sendResponse({
+						status: 'error',
+						message: 'This website is not currently tracked.',
+					});
+				}
+
+				if (
+					!trackedData[urlToRemoveLimit]['limit'] &&
+					request.removalType === 'limit'
+				) {
+					sendResponse({
+						status: 'error',
+						message: 'This website is not currently limited.',
+					});
+				}
+
+				pendingRemovals[urlToRemoveLimit] = Date.now();
+
+				await setData(PENDING_REMOVALS_KEY, pendingRemovals);
+
+				if (request.removalType === 'timer') {
+					chrome.alarms.create(`confirm_removal_timer_${urlToRemoveLimit}`, {
+						delayInMinutes: REMOVAL_COOL_DOWN_MS / (1000 * 60),
+					});
+				} else if (request.removalType === 'limit') {
+					chrome.alarms.create(`confirm_removal_limit_${urlToRemoveLimit}`, {
+						delayInMinutes: REMOVAL_COOL_DOWN_MS / (1000 * 60),
+					});
+				}
+
 				sendResponse({
 					status: 'success',
-					message: 'Time limit removed',
+					message: `Removal request initiated. You can confirm the removal in ${
+						REMOVAL_COOL_DOWN_MS / (1000 * 60)
+					} min.`,
 				});
 			} catch (error) {
 				console.error(
@@ -285,6 +361,28 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 					message: error.message,
 				});
 			}
+		} else if (request.action === 'confirmedRemoval') {
+			try {
+				const currentTab = await getCurrentTab();
+				const url = currentTab.url;
+				const currentUrl = getHostname(url);
+
+				await removeProp(currentUrl, request.removalType);
+
+				sendResponse({
+					status: 'success',
+					removalType: request.removalType,
+				});
+			} catch (error) {
+				console.error(
+					'Background: Failed to remove limit or timer. ERROR: ',
+					error
+				);
+				sendResponse({
+					status: 'error',
+					message: error.message,
+				});
+			}
 		}
 	})();
 	return true;
@@ -293,6 +391,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 // Ensure default data for local storage
 export async function initializeExtension() {
 	await ensureDefaultData(TRACKED_DATA_KEY, {});
+	await ensureDefaultData(PENDING_REMOVALS_KEY, {});
 
 	const today = new Date().toLocaleDateString();
 	await ensureDefaultData(STORAGE_LAST_DAY_KEY, today);

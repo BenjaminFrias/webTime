@@ -27,4 +27,9 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 			timerUI.createBlockElem();
 		}
 	}
+
+	if (request.type === 'confirmRemovalPopup') {
+		timerUI.createConfirmRemovalPopup(request.removalType);
+		return true;
+	}
 });

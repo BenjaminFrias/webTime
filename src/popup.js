@@ -44,7 +44,8 @@ document.addEventListener('DOMContentLoaded', () => {
 	stopTrackingBtn.addEventListener('click', () => {
 		chrome.runtime.sendMessage(
 			{
-				action: 'stopTracking',
+				action: 'requestRemove',
+				removalType: 'timer',
 			},
 			function (response) {
 				if (response && response.status === 'success') {
@@ -53,16 +54,16 @@ document.addEventListener('DOMContentLoaded', () => {
 					resultMessage.textContent = response.message;
 					setTimeout(() => {
 						resultMessage.textContent = '';
-					}, 2000);
+					}, 5000);
 
 					setTimeout(() => {
 						window.close();
-					}, 2000);
+					}, 5000);
 				} else {
 					resultMessage.textContent = response.message;
 					setTimeout(() => {
 						resultMessage.textContent = '';
-					}, 2000);
+					}, 5000);
 				}
 			}
 		);
@@ -92,11 +93,11 @@ document.addEventListener('DOMContentLoaded', () => {
 					resultMessage.textContent = response.message;
 					setTimeout(() => {
 						resultMessage.textContent = '';
-					}, 2000);
+					}, 5000);
 
 					setTimeout(() => {
 						window.close();
-					}, 2000);
+					}, 5000);
 				} else {
 					resultMessage.textContent = response.message;
 				}
@@ -107,7 +108,8 @@ document.addEventListener('DOMContentLoaded', () => {
 	removeLimitBtn.addEventListener('click', () => {
 		chrome.runtime.sendMessage(
 			{
-				action: 'removeLimit',
+				action: 'requestRemove',
+				removalType: 'limit',
 			},
 			function (response) {
 				if (response && response.status === 'success') {
@@ -116,16 +118,16 @@ document.addEventListener('DOMContentLoaded', () => {
 					resultMessage.textContent = response.message;
 					setTimeout(() => {
 						resultMessage.textContent = '';
-					}, 2000);
+					}, 5000);
 
 					setTimeout(() => {
 						window.close();
-					}, 2000);
+					}, 5000);
 				} else {
 					resultMessage.textContent = response.message;
 					setTimeout(() => {
 						resultMessage.textContent = '';
-					}, 2000);
+					}, 5000);
 				}
 			}
 		);
@@ -139,6 +141,10 @@ document.addEventListener('DOMContentLoaded', () => {
 			function (response) {
 				if (response && response.status === 'success') {
 					// toggle data
+					addNewWebSection.classList.remove('hidden');
+					removeLimitSection.classList.remove('hidden');
+					addLimitSection.classList.remove('hidden');
+					stopTrackingSection.classList.remove('hidden');
 
 					if (!response.data.isTracked) {
 						// Is not tracked
@@ -174,7 +180,7 @@ document.addEventListener('DOMContentLoaded', () => {
 					resultMessage.textContent = response.message;
 					setTimeout(() => {
 						resultMessage.textContent = '';
-					}, 2000);
+					}, 5000);
 				}
 			}
 		);
