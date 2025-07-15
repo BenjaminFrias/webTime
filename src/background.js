@@ -14,7 +14,7 @@ import {
 import { Timer } from './utils/timer.js';
 import { isTrackedURL, getHostname, getCurrentTab } from './utils/tab.js';
 
-const REMOVAL_COOL_DOWN_MS = 0.02 * 60 * 1000;
+const REMOVAL_COOL_DOWN_MS = 0.07 * 60 * 1000;
 const currentTimer = new Timer();
 
 const defaultTimer = { hours: 0, minutes: 0, seconds: 0 };
@@ -51,7 +51,14 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
 		resetTimerDaily();
 	} else if (alarm.name.startsWith('confirm_removal')) {
 		const alarmData = alarm.name.replace('confirm_removal_', '');
-		const [removalType, url] = alarmData.split('_');
+		const [removalType, targetTabId, url] = alarmData.split('_');
+
+		// Remove pending url
+		const pendingData = await getData(PENDING_REMOVALS_KEY);
+		if (pendingData[url]) {
+			delete pendingData[url];
+			await setData(PENDING_REMOVALS_KEY, pendingData);
+		}
 
 		const hostname = getHostname(url);
 		const website = hostname.split('://')[1].replace('/', '');
@@ -64,18 +71,10 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
 			isClickable: true,
 		});
 
-		// TODO: use tab id from alarm name, not from current tab
-		const currentTab = await getCurrentTab();
-		chrome.tabs.sendMessage(tabId, {
+		chrome.tabs.sendMessage(Number(targetTabId), {
 			type: 'confirmRemovalPopup',
 			removalType: removalType,
 		});
-
-		const pendingData = await getData(PENDING_REMOVALS_KEY);
-		if (pendingData[url]) {
-			delete pendingData[url];
-			await setData(PENDING_REMOVALS_KEY, pendingData);
-		}
 	}
 });
 
@@ -267,14 +266,21 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
 				await setData(PENDING_REMOVALS_KEY, pendingRemovals);
 
+				const targetTabId = currentTab.id;
 				if (request.removalType === 'timer') {
-					chrome.alarms.create(`confirm_removal_timer_${urlToRemoveLimit}`, {
-						delayInMinutes: REMOVAL_COOL_DOWN_MS / (1000 * 60),
-					});
+					chrome.alarms.create(
+						`confirm_removal_timer_${targetTabId}_${urlToRemoveLimit}`,
+						{
+							delayInMinutes: REMOVAL_COOL_DOWN_MS / (1000 * 60),
+						}
+					);
 				} else if (request.removalType === 'limit') {
-					chrome.alarms.create(`confirm_removal_limit_${urlToRemoveLimit}`, {
-						delayInMinutes: REMOVAL_COOL_DOWN_MS / (1000 * 60),
-					});
+					chrome.alarms.create(
+						`confirm_removal_limit_${targetTabId}_${urlToRemoveLimit}`,
+						{
+							delayInMinutes: REMOVAL_COOL_DOWN_MS / (1000 * 60),
+						}
+					);
 				}
 
 				sendResponse({
