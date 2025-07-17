@@ -14,7 +14,7 @@ import {
 import { Timer } from './utils/timer.js';
 import { isTrackedURL, getHostname, getCurrentTab } from './utils/tab.js';
 
-const REMOVAL_COOL_DOWN_MS = 0.07 * 60 * 1000;
+const REMOVAL_COOL_DOWN_MS = 5 * 60 * 1000;
 const currentTimer = new Timer();
 
 const defaultTimer = { hours: 0, minutes: 0, seconds: 0 };

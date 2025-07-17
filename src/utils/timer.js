@@ -50,7 +50,10 @@ export class Timer {
 				(minutesLimit === 0 || minutesLimit)
 			) {
 				// Check if current time is equal to limit
-				if (hours >= hoursLimit && minutes >= minutesLimit) {
+				const totalMinutesLimit = hoursLimit * 60 + minutesLimit;
+				const totalMinutesCurrent = hours * 60 + minutes;
+
+				if (totalMinutesCurrent >= totalMinutesLimit) {
 					sendData('timeout', 'limit', {
 						hoursLimit: hoursLimit,
 						minutesLimit: minutesLimit,
