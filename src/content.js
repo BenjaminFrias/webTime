@@ -24,7 +24,16 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 
 	if (request.type === 'timeout') {
 		if (!timerUI.blockElem) {
-			timerUI.createBlockElem();
+			const { hoursLimit, minutesLimit } = request.limit;
+
+			let limitTimeText;
+			if (hoursLimit <= 0) {
+				limitTimeText = `${minutesLimit} minutes`;
+			} else {
+				limitTimeText = `${hoursLimit} hours ${minutesLimit} minutes`;
+			}
+
+			timerUI.createBlockElem(limitTimeText);
 		}
 	}
 

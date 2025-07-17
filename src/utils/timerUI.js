@@ -56,7 +56,7 @@ export class TimerUI {
 		}
 	}
 
-	createBlockElem() {
+	createBlockElem(timeSpent) {
 		const blockContainer = document.createElement('div');
 		blockContainer.classList.add('block-container');
 		blockContainer.classList.add('show-full-page');
@@ -64,7 +64,11 @@ export class TimerUI {
 		const limitText = document.createElement('p');
 		limitText.textContent = 'Limit reached!';
 
+		const totalSpentText = document.createElement('p');
+		totalSpentText.textContent = `You've spent your time limit - ${timeSpent}!`;
+
 		blockContainer.appendChild(limitText);
+		blockContainer.appendChild(totalSpentText);
 		document.body.appendChild(blockContainer);
 
 		this.blockElem = blockContainer;
